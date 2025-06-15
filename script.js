@@ -532,11 +532,15 @@ winLearnMoreButton.addEventListener('click', () => {
 pauseResumeButton.addEventListener('click', togglePauseResume);
 
 document.addEventListener('keydown', (e) => {
-    if (e.code === 'Space' && gameRunning && !gamePaused) {
-        character.jump();
-    }
-    if (e.code === 'KeyP') {
+    if (e.code === 'Space') {
+        if (gameRunning && !gamePaused) {
+            character.jump();
+        }
+        // Prevent default to avoid scrolling
+        e.preventDefault();
+    } else if (e.code === 'KeyP') {
         togglePauseResume();
+        e.preventDefault();
     }
 });
 
