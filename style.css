@@ -1,0 +1,51 @@
+/* Custom CSS for Water Runner Game */
+
+/* Ensure the body uses the Inter font as requested */
+body {
+    font-family: 'Inter', sans-serif;
+}
+
+/* Base styles for the game canvas */
+#gameCanvas {
+    background-color: #d1e7f0; /* Light blue background for water theme */
+    border-radius: 0.5rem; /* Rounded corners for the canvas */
+    display: block; /* Remove extra space below canvas */
+}
+
+/* Styles for game UI overlays (menus, game over screen) */
+.game-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    z-index: 10; /* Ensure overlays are on top of the canvas */
+    border-radius: 0.5rem; /* Match container rounded corners */
+}
+
+/* General styling for game buttons */
+.game-button {
+    cursor: pointer;
+    border: none;
+    outline: none;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2); /* Soft shadow for buttons */
+    /* Transition properties are mostly handled by Tailwind classes in HTML */
+}
+
+/* Responsive adjustments for game container aspect ratio */
+@media (min-aspect-ratio: 16/9) {
+    #game-container {
+        height: 90vh; /* Max height on wide screens */
+        width: auto;
+        aspect-ratio: 16 / 9; /* Maintain aspect ratio */
+    }
+}
+
+@media (max-aspect-ratio: 16/9) {
+    #game-container {
+        width: 90vw; /* Max width on tall screens */
+        height: auto;
+        aspect-ratio: 16 / 9; /* Maintain aspect ratio */
+    }
+}
