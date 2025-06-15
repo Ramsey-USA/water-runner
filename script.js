@@ -33,6 +33,8 @@ const gameOverFact = document.getElementById('gameOverFact');
 const scoreText = document.getElementById('score-text');
 const jerrycanFill = document.getElementById('jerrycan-fill');
 const factsTicker = document.querySelector('#facts-ticker .fact-text');
+const timerValue = document.getElementById('timer-value');
+const bestTimeValue = document.getElementById('best-time-value');
 
 // --- Game State Variables ---
 let gameRunning = false;
@@ -240,6 +242,50 @@ function checkCollision(obj1, obj2) {
            obj1.y + obj1.height > obj2.y;
 }
 
+// --- Timer Variables ---
+let startTime = 0;
+let elapsedTime = 0;
+let timerRunning = false;
+let bestTime = null;
+
+// --- Timer Functions ---
+function startTimer() {
+    startTime = performance.now();
+    elapsedTime = 0;
+    timerRunning = true;
+}
+
+function stopTimer() {
+    timerRunning = false;
+}
+
+function resetTimer() {
+    elapsedTime = 0;
+    if (timerValue) timerValue.textContent = "0.00";
+}
+
+function updateTimer(currentTime) {
+    if (timerRunning) {
+        elapsedTime = (currentTime - startTime) / 1000;
+        if (timerValue) timerValue.textContent = elapsedTime.toFixed(2);
+    }
+}
+
+// --- Best Time Functions ---
+function loadBestTime() {
+    const stored = localStorage.getItem('waterRunnerBestTime');
+    bestTime = stored ? parseFloat(stored) : null;
+    if (bestTimeValue) bestTimeValue.textContent = bestTime ? bestTime.toFixed(2) : "--";
+}
+
+function saveBestTime(time) {
+    if (!bestTime || time < bestTime) {
+        bestTime = time;
+        localStorage.setItem('waterRunnerBestTime', bestTime);
+        if (bestTimeValue) bestTimeValue.textContent = bestTime.toFixed(2);
+    }
+}
+
 // --- Game Loop ---
 function gameLoop(currentTime) {
     if (!gameRunning || gamePaused) return;
@@ -248,6 +294,9 @@ function gameLoop(currentTime) {
     const deltaTime = currentTime - lastFrameTime || 16.67;
     lastFrameTime = currentTime;
     const dt = deltaTime / 16.67; // 1 at 60fps
+
+    // --- Timer update ---
+    updateTimer(currentTime);
 
     // Draw background
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -399,6 +448,8 @@ function startGame() {
     gamePaused = false;
     pauseResumeButton.textContent = "Pause";
     lastFrameTime = performance.now();
+    resetTimer();
+    startTimer(); // <-- Start timer when game starts
     animationFrameId = requestAnimationFrame(gameLoop);
 }
 
@@ -408,12 +459,15 @@ function endGame(reason = "obstacle") {
     finalScoreText.textContent = `You collected ${score} liters of water.`;
     gameOverFact.textContent = awarenessFacts[Math.floor(Math.random() * awarenessFacts.length)];
     gameOverScreen.classList.add('active');
+    stopTimer();
 }
 
 function winGame() {
     gameRunning = false;
     cancelAnimationFrame(animationFrameId);
     winScreen.classList.add('active');
+    stopTimer();
+    saveBestTime(elapsedTime);
 }
 
 function togglePauseResume() {
@@ -490,4 +544,8 @@ document.addEventListener('keydown', (e) => {
 window.onload = () => {
     startScreen.classList.add('active');
     updateJerryCan();
+    loadBestTime();
+    resetTimer();
 };
+
+/* Removed redundant DOMContentLoaded event listener */

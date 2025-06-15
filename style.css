@@ -1,12 +1,11 @@
 /* === ROOT VARIABLES === */
 :root {
-    --color-blue: #0091A4;
+    --color-blue: #2E86DE;
     --color-yellow: #FFB300;
     --color-white: #FFFFFF;
     --color-dark-gray: #333;
     --color-light-blue-bg: #E0F2F7;
     --color-ground: #8B4513;
-    --color-green: #0498c0;
 
     --font-main: 'Montserrat', 'Arial', sans-serif;
 
@@ -55,7 +54,7 @@ h1, h2, h3, h4, h5, h6 {
 
 /* === HEADER === */
 #game-header {
-    background: var(--color-green);
+    background: var(--color-green, #43a047);
     color: var(--color-white);
     padding: var(--header-padding);
     display: flex;
@@ -71,7 +70,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .game-title {
     flex: 1 1 auto;
-    font-size: clamp(1.4em, 2.8vw, 3em);
+    font-size: 2.8vw;
     font-weight: 900;
     letter-spacing: 0.07em;
     text-shadow: 0 2px 12px rgba(46,134,222,0.13), 0 1px 0 #fff, 0 0 8px var(--color-yellow);
@@ -209,14 +208,10 @@ canvas {
 #score-text {
     position: absolute;
     left: 0;
-    bottom: 8px;
-    width: 100%;              /* Makes the text as wide as the jerry can container */
-    text-align: center;       /* Centers the text horizontally */
-    font-size: clamp(1em, 3vw, 2em);
-    font-weight: 900;
-    color: var(--score-color);
-    background: transparent;
-    padding: 0px 0 4px 0;     /* Optional: adjust vertical padding, no horizontal */
+    bottom: 16px;
+    width: 100%;
+    text-align: center;
+    padding: 10px 0 8px 0;
     border-radius: var(--score-radius);
     z-index: 2;
     text-shadow: 0 2px 8px rgba(255,255,255,0.22), 0 1px 0 #fff, 0 0 2px #fff;
@@ -225,7 +220,11 @@ canvas {
     transition: color 0.2s, background 0.2s;
     box-shadow: var(--score-shadow);
     opacity: 1;
+    border: var(--score-border);
     pointer-events: none;
+    color: var(--score-color);
+    background: var(--score-bg);
+    font-weight: 900;
 }
 
 /* === GAME UI & FACTS TICKER === */
@@ -305,6 +304,43 @@ canvas {
     width: 100%;
     font-size: 1em;
     word-break: break-word;
+}
+
+/* === TIMER BAR === */
+#timer-bar {
+    position: fixed;
+    left: 50%;
+    bottom: 18px;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 2.5em;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255,255,255,0.92);
+    color: var(--color-blue);
+    font-family: var(--font-main);
+    font-size: 1.3em;
+    font-weight: 700;
+    border-radius: 18px;
+    padding: 8px 28px;
+    box-shadow: 0 2px 12px rgba(46,134,222,0.10);
+    z-index: 999;
+    min-width: 180px;
+    letter-spacing: 0.04em;
+}
+
+#timer-bar span {
+    margin: 0 0.5em;
+}
+
+@media (max-width: 600px) {
+    #timer-bar {
+        font-size: 1em;
+        padding: 6px 12px;
+        gap: 1.2em;
+        min-width: 120px;
+        bottom: 8px;
+    }
 }
 
 /* === GAME SCREENS === */
@@ -416,11 +452,6 @@ canvas {
     .game-title {
         font-size: clamp(1em, 5vw, 1.5em);
     }
-    .header-button {
-        font-size: 0.9em;
-        padding: 7px 14px;
-    }
-    /* Remove fixed px sizes for jerrycan on mobile, let clamp handle it */
     #score-jerrycan {
         margin-right: 1vw;
     }
@@ -428,6 +459,10 @@ canvas {
         font-size: clamp(0.85em, 4vw, 1.2em);
         padding: 0.1em 0 0.1em 0;
         border-radius: 8px;
+    }
+    .header-button {
+        font-size: 0.9em;
+        padding: 7px 14px;
     }
     #facts-ticker {
         font-size: 0.8em;
@@ -448,5 +483,12 @@ canvas {
     #facts-ticker span.fact-text {
         font-size: 0.95em;
         padding: 0;
+    }
+    #timer-bar {
+        font-size: 1em;
+        padding: 6px 12px;
+        gap: 1.2em;
+        min-width: 120px;
+        bottom: 8px;
     }
 }
