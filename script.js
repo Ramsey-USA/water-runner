@@ -1,731 +1,436 @@
-// Ensure the script runs after the DOM is fully loaded
-window.onload = function() {
-    // --- Canvas Setup ---
-    const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
-    let animationFrameId; // To store the requestAnimationFrame ID
-
-    // --- Game State Variables ---
-    const GAME_STATES = {
-        MAIN_MENU: 'mainMenu',
-        GAMEPLAY: 'gameplay',
-        PAUSED: 'paused',
-        GAME_OVER: 'gameOver',
-        GAME_WIN: 'gameWin',
-        SETTINGS: 'settings'
-    };
-    let currentGameState = GAME_STATES.MAIN_MENU;
-    let lastTimestamp = 0; // For delta time calculation
-    const targetFPS = 60;
-    const frameInterval = 1000 / targetFPS;
-
-    // --- Game Elements (Instances) ---
-    let player;
-    let obstacles = [];
-    let waterDroplets = [];
-    let rollingDrums = []; // New obstacle type
-    let scoreBar;
-    let gravity = 0.5; // Controls jump height and fall speed
-    let gameSpeed = 1; // Base speed for obstacles, increases over time
-    const initialGameSpeed = 1;
-    let waterCollectedCount = 0; // Count droplets to increase speed
-    const dropletsPerSpeedIncrease = 10; // Increase speed every X droplets
-
-    // --- UI Elements ---
-    const mainMenuScreen = document.getElementById('mainMenu');
-    const playButton = document.getElementById('playButton');
-    const settingsButton = document.getElementById('settingsButton');
-    const leaderboardsButton = document.getElementById('leaderboardsButton');
-
-    const pauseMenuScreen = document.getElementById('pauseMenu');
-    const resumeButton = document.getElementById('resumeButton');
-    const restartPauseButton = document.getElementById('restartPauseButton');
-    const mainMenuPauseButton = document.getElementById('mainMenuPauseButton');
-
-    const gameOverWinScreen = document.getElementById('gameOverWinScreen');
-    const resultText = document.getElementById('resultText');
-    const finalScoreText = document.getElementById('finalScoreText');
-    const playAgainButton = document.getElementById('playAgainButton');
-    const mainMenuGameOverButton = document.getElementById('mainMenuGameOverButton');
-    const charityLink = document.getElementById('charityLink');
-
-    const settingsScreen = document.getElementById('settingsScreen');
-    const musicVolumeSlider = document.getElementById('musicVolume');
-    const sfxVolumeSlider = document.getElementById('sfxVolume');
-    const vibrationToggle = document.getElementById('vibrationToggle');
-    const backSettingsButton = document.getElementById('backSettingsButton');
-
-    // --- Charity: Water Brand Colors (Hex values) ---
-    const CHARITY_BLUE = '#2E9DF7'; // Water Blue
-    const CHARITY_YELLOW = '#FFC907'; // Jerry Can Yellow
-    const CHARITY_DARK_GRAY = '#231F20'; // Text/Accent
-    const CHARITY_TEAL = '#8BD1CB'; // Secondary
-    const CHARITY_GREEN = '#4FCB53'; // Secondary
-    const CHARITY_ORANGE = '#FF902A'; // Secondary
-    const CHARITY_RED = '#F5402C'; // Secondary
-
-    // --- Game Settings (can be controlled by settings screen later) ---
-    let settings = {
-        musicVolume: 0.5, // 0.0 to 1.0
-        sfxVolume: 0.75, // 0.0 to 1.0
-        vibrationEnabled: true
-    };
-
-    // Placeholder for charity facts rotation
-    const charityFacts = [
-        "Every 90 seconds, a child dies from a water-related disease.",
-        "Over 700 million people live without clean water.",
-        "Clean water empowers women, improves health, and boosts economies.",
-        "charity: water brings clean and safe drinking water to people in developing countries.",
-        "100% of public donations fund water projects.",
-        "Support charity: water and transform lives with clean water."
-    ];
-    let currentFactIndex = 0;
-    let factDisplayTimer = 0;
-    const factDisplayDuration = 5000; // 5 seconds per fact
-
-    // --- Game Object Classes ---
-
-    /**
-     * Player Class: Handles player drawing, movement, and jump logic.
-     */
-    class Player {
-        constructor(x, y, width, height) {
-            this.x = x;
-            this.y = y;
-            this.width = width;
-            this.height = height;
-            this.velocityY = 0;
-            this.isJumping = false;
-            this.groundY = canvas.height * 0.75 - this.height; // Ground level for player
-        }
-
-        draw() {
-            ctx.fillStyle = CHARITY_GREEN; // Player color (from secondary charity colors)
-            ctx.beginPath();
-            ctx.ellipse(this.x + this.width / 2, this.y + this.height / 2, this.width / 2, this.height / 2, 0, 0, Math.PI * 2);
-            ctx.fill();
-            // Placeholder for text label
-            ctx.fillStyle = CHARITY_DARK_GRAY;
-            ctx.font = `${0.02 * canvas.width}px Inter`;
-            ctx.textAlign = 'center';
-            ctx.fillText('Player', this.x + this.width / 2, this.y + this.height + 15);
-        }
-
-        update(deltaTime) {
-            // Apply gravity if not on the ground
-            if (this.y < this.groundY) {
-                this.velocityY += gravity * deltaTime;
-                this.y += this.velocityY * deltaTime;
-            } else {
-                this.y = this.groundY; // Snap to ground
-                this.velocityY = 0;
-                this.isJumping = false;
-            }
-        }
-
-        jump() {
-            if (!this.isJumping) {
-                this.velocityY = -canvas.height * 0.025; // Jump strength (adjusted for canvas size)
-                this.isJumping = true;
-                // Play jump sound (if implemented)
-                // playSound('jump');
-            }
-        }
-
-        // Method to get collision bounds
-        getBounds() {
-            return {
-                x: this.x,
-                y: this.y,
-                width: this.width,
-                height: this.height
-            };
-        }
-    }
-
-    /**
-     * Obstacle Class: Base class for moving obstacles.
-     */
-    class Obstacle {
-        constructor(x, y, width, height, color) {
-            this.x = x;
-            this.y = y;
-            this.width = width;
-            this.height = height;
-            this.color = color;
-            this.baseSpeed = 0.5; // Base speed relative to canvas width
-        }
-
-        draw() {
-            ctx.fillStyle = this.color;
-            ctx.beginPath();
-            ctx.ellipse(this.x + this.width / 2, this.y + this.height / 2, this.width / 2, this.height / 2, 0, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.fillStyle = CHARITY_DARK_GRAY;
-            ctx.font = `${0.02 * canvas.width}px Inter`;
-            ctx.textAlign = 'center';
-            ctx.fillText('Obstacle', this.x + this.width / 2, this.y + this.height + 15);
-        }
-
-        update(deltaTime, currentSpeed) {
-            this.x -= (this.baseSpeed * canvas.width * currentSpeed) * deltaTime;
-        }
-
-        isOffscreen() {
-            return this.x + this.width < 0;
-        }
-
-        getBounds() {
-            return {
-                x: this.x,
-                y: this.y,
-                width: this.width,
-                height: this.height
-            };
-        }
-    }
-
-    /**
-     * RollingDrum Class: Specific obstacle type.
-     */
-    class RollingDrum extends Obstacle {
-        constructor(x, y, width, height) {
-            super(x, y, width, height, CHARITY_BLUE); // Use charity blue for drum
-            this.rotation = 0;
-            this.rotationSpeed = 0.1; // Adjust as needed for visual rolling effect
-        }
-
-        draw() {
-            ctx.save(); // Save current canvas state
-            ctx.translate(this.x + this.width / 2, this.y + this.height / 2); // Move origin to center of drum
-            ctx.rotate(this.rotation); // Apply rotation
-            ctx.fillStyle = this.color;
-            ctx.fillRect(-this.width / 2, -this.height / 2, this.width, this.height); // Draw rectangle from new origin
-            ctx.strokeStyle = CHARITY_DARK_GRAY;
-            ctx.lineWidth = 2;
-            ctx.strokeRect(-this.width / 2, -this.height / 2, this.width, this.height);
-            // Add bands for drum visual
-            ctx.beginPath();
-            ctx.moveTo(-this.width / 2, -this.height / 4);
-            ctx.lineTo(this.width / 2, -this.height / 4);
-            ctx.moveTo(-this.width / 2, this.height / 4);
-            ctx.lineTo(this.width / 2, this.height / 4);
-            ctx.stroke();
-
-            ctx.restore(); // Restore canvas state
-
-            ctx.fillStyle = CHARITY_DARK_GRAY;
-            ctx.font = `${0.02 * canvas.width}px Inter`;
-            ctx.textAlign = 'center';
-            ctx.fillText('Drum', this.x + this.width / 2, this.y + this.height + 15);
-        }
-
-        update(deltaTime, currentSpeed) {
-            super.update(deltaTime, currentSpeed); // Update position
-            this.rotation += this.rotationSpeed * deltaTime; // Update rotation
-        }
-    }
-
-
-    /**
-     * WaterDroplet Class: Collectible item.
-     */
-    class WaterDroplet {
-        constructor(x, y, radius) {
-            this.x = x;
-            this.y = y;
-            this.radius = radius;
-            this.color = CHARITY_BLUE; // Use charity blue for water droplets
-            this.baseSpeed = 0.5; // Base speed relative to canvas width
-        }
-
-        draw() {
-            ctx.fillStyle = this.color;
-            ctx.beginPath();
-            ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-            ctx.fill();
-            // Placeholder for text label
-            ctx.fillStyle = CHARITY_DARK_GRAY;
-            ctx.font = `${0.02 * canvas.width}px Inter`;
-            ctx.textAlign = 'center';
-            ctx.fillText('Droplet', this.x, this.y + this.radius + 15);
-        }
-
-        update(deltaTime, currentSpeed) {
-            this.x -= (this.baseSpeed * canvas.width * currentSpeed) * deltaTime;
-        }
-
-        isOffscreen() {
-            return this.x + this.radius < 0;
-        }
-
-        getBounds() {
-            return {
-                x: this.x - this.radius,
-                y: this.y - this.radius,
-                width: this.radius * 2,
-                height: this.radius * 2
-            };
-        }
-    }
-
-    /**
-     * ScoreBar Class: Visual score indicator that fills to win.
-     */
-    class ScoreBar {
-        constructor(x, y, width, height, maxScore) {
-            this.x = x;
-            this.y = y;
-            this.width = width;
-            this.height = height;
-            this.maxScore = maxScore; // Number of droplets to fill the bar
-            this.currentScore = 0;
-            this.fillColor = CHARITY_YELLOW; // Use charity yellow for the fill
-            this.emptyColor = '#333'; // Darker color for the empty part
-            this.outlineColor = CHARITY_DARK_GRAY;
-            this.padding = 5; // Padding inside the bar for the fill
-        }
-
-        draw() {
-            // Draw empty bar background
-            ctx.fillStyle = this.emptyColor;
-            ctx.fillRect(this.x, this.y, this.width, this.height);
-
-            // Draw filled portion
-            const fillWidth = (this.currentScore / this.maxScore) * this.width;
-            ctx.fillStyle = this.fillColor;
-            ctx.fillRect(this.x, this.y, fillWidth, this.height);
-
-            // Draw outline
-            ctx.strokeStyle = this.outlineColor;
-            ctx.lineWidth = 2;
-            ctx.strokeRect(this.x, this.y, this.width, this.height);
-
-            // Draw text label
-            ctx.fillStyle = CHARITY_DARK_GRAY;
-            ctx.font = `${0.02 * canvas.width}px Inter`;
-            ctx.textAlign = 'left';
-            ctx.fillText('Score Bar', this.x, this.y - 10);
-        }
-
-        addScore(amount) {
-            this.currentScore = Math.min(this.currentScore + amount, this.maxScore);
-        }
-
-        isFilled() {
-            return this.currentScore >= this.maxScore;
-        }
-
-        reset() {
-            this.currentScore = 0;
-        }
-    }
-
-    /**
-     * Ground Class: Draws the running path.
-     */
-    class Ground {
-        constructor(y, height) {
-            this.y = y;
-            this.height = height;
-            this.color = '#8B4513'; // Brown color for ground
-            this.detailColor = '#A0522D'; // Slightly lighter brown for lines
-        }
-
-        draw() {
-            ctx.fillStyle = this.color;
-            ctx.fillRect(0, this.y, canvas.width, this.height);
-
-            // Add simple diagonal lines for detail
-            ctx.strokeStyle = this.detailColor;
-            ctx.lineWidth = 2;
-            for (let i = 0; i < canvas.width; i += canvas.width * 0.05) { // Adjust spacing based on canvas width
-                ctx.beginPath();
-                ctx.moveTo(i, this.y);
-                ctx.lineTo(i + (canvas.width * 0.02), this.y + this.height); // Adjust line length
-                ctx.stroke();
-            }
-        }
-    }
-
-    // --- Collision Detection ---
-    function checkCollision(obj1, obj2) {
-        const b1 = obj1.getBounds();
-        const b2 = obj2.getBounds();
-
-        return b1.x < b2.x + b2.width &&
-               b1.x + b1.width > b2.x &&
-               b1.y < b2.y + b2.height &&
-               b1.y + b1.height > b2.y;
-    }
-
-    // --- Game Initialization ---
-    function initializeGame() {
-        // Calculate dynamic sizes based on canvas dimensions
-        const playerWidth = canvas.width * 0.05;
-        const playerHeight = canvas.height * 0.15;
-        const groundHeight = canvas.height * 0.25; // 25% of canvas height
-        const groundY = canvas.height - groundHeight;
-
-        player = new Player(canvas.width * 0.1, groundY - playerHeight, playerWidth, playerHeight);
-        player.groundY = groundY - playerHeight; // Set player's ground level
-        ground = new Ground(groundY, groundHeight);
-
-        const scoreBarWidth = canvas.width * 0.2;
-        const scoreBarHeight = canvas.height * 0.03;
-        scoreBar = new ScoreBar(
-            canvas.width * 0.05, // X position
-            canvas.height * 0.05, // Y position
-            scoreBarWidth,
-            scoreBarHeight,
-            20 // Max droplets to fill the bar
-        );
-
-        obstacles = [];
-        waterDroplets = [];
-        rollingDrums = [];
-        gameSpeed = initialGameSpeed;
-        waterCollectedCount = 0;
-        scoreBar.reset();
-        currentFactIndex = 0; // Reset fact display
-        factDisplayTimer = 0;
-
-        // Reset settings related state
-        settings.musicVolume = musicVolumeSlider.value / 100;
-        settings.sfxVolume = sfxVolumeSlider.value / 100;
-        settings.vibrationEnabled = vibrationToggle.checked;
-        // console.log("Game initialized with settings:", settings); // For debugging
-    }
-
-    // --- Game Update Loop ---
-    let lastObstacleTime = 0;
-    const minObstacleInterval = 1000; // milliseconds
-    const maxObstacleInterval = 2000;
-
-    let lastDropletTime = 0;
-    const minDropletInterval = 500;
-    const maxDropletInterval = 1500;
-
-    let lastDrumTime = 0;
-    const minDrumInterval = 3000; // Drums are rarer
-    const maxDrumInterval = 6000;
-
-
-    function update(deltaTime) {
-        // Update player
-        player.update(deltaTime);
-
-        // Generate obstacles and droplets
-        if (performance.now() - lastObstacleTime > Math.random() * (maxObstacleInterval - minObstacleInterval) + minObstacleInterval) {
-            const obstacleWidth = canvas.width * 0.04;
-            const obstacleHeight = canvas.height * 0.1;
-            obstacles.push(new Obstacle(canvas.width, player.groundY - obstacleHeight, obstacleWidth, obstacleHeight, CHARITY_RED));
-            lastObstacleTime = performance.now();
-        }
-        if (performance.now() - lastDropletTime > Math.random() * (maxDropletInterval - minDropletInterval) + minDropletInterval) {
-            const dropletRadius = canvas.width * 0.015;
-            // Droplets can appear at varying heights, considering max jump
-            const minY = player.groundY - player.height - (canvas.height * 0.1); // Min height above player
-            const maxY = player.groundY - player.height - (canvas.height * 0.25); // Max jump height
-            waterDroplets.push(new WaterDroplet(canvas.width, Math.random() * (minY - maxY) + maxY, dropletRadius));
-            lastDropletTime = performance.now();
-        }
-
-        // Generate rolling drums
-        if (performance.now() - lastDrumTime > Math.random() * (maxDrumInterval - minDrumInterval) + minDrumInterval) {
-            const drumSize = canvas.width * 0.06;
-            rollingDrums.push(new RollingDrum(canvas.width, player.groundY - drumSize, drumSize, drumSize));
-            lastDrumTime = performance.now();
-        }
-
-
-        // Update and filter obstacles
-        obstacles = obstacles.filter(obstacle => {
-            obstacle.update(deltaTime, gameSpeed);
-            if (checkCollision(player, obstacle)) {
-                endGame(false); // Player loses
-                return false; // Remove obstacle on collision
-            }
-            return !obstacle.isOffscreen();
-        });
-
-        // Update and filter water droplets
-        waterDroplets = waterDroplets.filter(droplet => {
-            droplet.update(deltaTime, gameSpeed);
-            if (checkCollision(player, droplet)) {
-                scoreBar.addScore(1);
-                waterCollectedCount++;
-                // Increase game speed every X droplets
-                if (waterCollectedCount % dropletsPerSpeedIncrease === 0 && gameSpeed < 3) { // Cap speed increase
-                    gameSpeed += 0.2; // Increment speed
-                    // playSound('speed_up'); // Implied sound
-                }
-                // playSound('collect'); // Implied sound
-                return false; // Remove droplet on collection
-            }
-            return !droplet.isOffscreen();
-        });
-
-        // Update and filter rolling drums
-        rollingDrums = rollingDrums.filter(drum => {
-            drum.update(deltaTime, gameSpeed);
-            if (checkCollision(player, drum)) {
-                endGame(false); // Player loses
-                return false; // Remove drum on collision
-            }
-            return !drum.isOffscreen();
-        });
-
-
-        // Check win condition
-        if (scoreBar.isFilled()) {
-            endGame(true); // Player wins
-        }
-
-        // Update charity facts display
-        factDisplayTimer += deltaTime;
-        if (factDisplayTimer >= factDisplayDuration) {
-            currentFactIndex = (currentFactIndex + 1) % charityFacts.length;
-            factDisplayTimer = 0;
-        }
-    }
-
-    // --- Game Drawing Loop ---
-    let ground; // Declare ground here as well
-
-    function draw() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear canvas
-
-        // Draw ground first
-        ground.draw();
-
-        // Draw game entities
-        player.draw();
-        obstacles.forEach(obstacle => obstacle.draw());
-        waterDroplets.forEach(droplet => droplet.draw());
-        rollingDrums.forEach(drum => drum.draw());
-
-
-        // Draw score bar (always on top)
-        scoreBar.draw();
-
-        // Draw UI text (score, pause icon placeholder)
-        ctx.fillStyle = CHARITY_DARK_GRAY;
-        ctx.font = `${0.03 * canvas.width}px Inter Bold`;
-        ctx.textAlign = 'right';
-        ctx.fillText('WATER RUNNER', canvas.width - (canvas.width * 0.05), canvas.height * 0.08);
-
-        // Draw pause button placeholder (actual button is HTML)
-        ctx.fillStyle = CHARITY_DARK_GRAY;
-        ctx.font = `${0.03 * canvas.width}px Inter`;
-        ctx.textAlign = 'center';
-        ctx.fillText('||', canvas.width * 0.95, canvas.height * 0.08); // Simple pause icon
-
-
-        // Draw charity fact (bottom bar)
-        const factBarHeight = canvas.height * 0.1; // 10% of canvas height
-        const factBarY = canvas.height - factBarHeight;
-        ctx.fillStyle = CHARITY_BLUE; // Use charity blue for the fact bar
-        ctx.fillRect(0, factBarY, canvas.width, factBarHeight);
-        ctx.fillStyle = 'white'; // White text for contrast
-        ctx.font = `${0.02 * canvas.width}px Inter`;
-        ctx.textAlign = 'center';
-        ctx.fillText(charityFacts[currentFactIndex], canvas.width / 2, factBarY + factBarHeight / 2 + 5); // Center text vertically
-    }
-
-    // --- Game Loop (main animation frame) ---
-    function gameLoop(timestamp) {
-        const deltaTime = (timestamp - lastTimestamp) / frameInterval; // Delta time for frame-rate independence
-        lastTimestamp = timestamp;
-
-        if (currentGameState === GAME_STATES.GAMEPLAY) {
-            update(deltaTime);
-            draw();
-        } else if (currentGameState === GAME_STATES.PAUSED) {
-            // Only draw when paused, don't update game logic
-            draw();
-        }
-        // No drawing for main menu, game over, settings as HTML overlays handle it
-
-        animationFrameId = requestAnimationFrame(gameLoop);
-    }
-
-    // --- Game State Management ---
-    function showScreen(screenId) {
-        const screens = [mainMenuScreen, pauseMenuScreen, gameOverWinScreen, settingsScreen];
-        screens.forEach(screen => {
-            if (screen.id === screenId) {
-                screen.style.display = 'flex'; // Show as flex container
-            } else {
-                screen.style.display = 'none'; // Hide others
-            }
-        });
-    }
-
-    function startGame() {
-        currentGameState = GAME_STATES.GAMEPLAY;
-        initializeGame();
-        showScreen(''); // Hide all overlays
-        if (!animationFrameId) {
-             lastTimestamp = performance.now(); // Reset timestamp for fresh start
-            animationFrameId = requestAnimationFrame(gameLoop);
-        }
-    }
-
-    function pauseGame() {
-        currentGameState = GAME_STATES.PAUSED;
-        showScreen('pauseMenu');
-    }
-
-    function resumeGame() {
-        currentGameState = GAME_STATES.GAMEPLAY;
-        showScreen('');
-    }
-
-    function endGame(hasWon) {
-        currentGameState = hasWon ? GAME_STATES.GAME_WIN : GAME_STATES.GAME_OVER;
-        cancelAnimationFrame(animationFrameId); // Stop game loop
-        animationFrameId = null;
-
-        if (hasWon) {
-            resultText.textContent = "VICTORY!";
-            finalScoreText.textContent = `Score Bar Filled!`;
-            charityLink.style.display = 'inline-block'; // Show link on win
-            // playSound('win'); // Implied sound
-        } else {
-            resultText.textContent = "GAME OVER";
-            finalScoreText.textContent = `You hit an obstacle. Try again!`;
-            charityLink.style.display = 'none'; // Hide link on lose, or show for general impact
-            // playSound('lose'); // Implied sound
-        }
-        showScreen('gameOverWinScreen');
-    }
-
-    function resetGame() {
-        // This function will be called by PLAY AGAIN or RESTART buttons
-        startGame(); // Re-initialize and start
-    }
-
-    function showMainMenu() {
-        currentGameState = GAME_STATES.MAIN_MENU;
-        cancelAnimationFrame(animationFrameId); // Stop game loop if running
-        animationFrameId = null;
-        showScreen('mainMenu');
-    }
-
-    function showSettings() {
-        currentGameState = GAME_STATES.SETTINGS;
-        showScreen('settingsScreen');
-        // If coming from gameplay/pause, keep the game running in background but paused
-        // If coming from main menu, no game running, so state remains settings
-    }
-
-    function backFromSettings() {
-        // Determine where to go back based on previous state if tracked,
-        // otherwise default to main menu or resume if game was already running
-        if (player && currentGameState !== GAME_STATES.MAIN_MENU) { // If game was playing/paused before settings
-            resumeGame(); // Go back to game (unpause)
-        } else {
-            showMainMenu(); // Go back to main menu
-        }
-    }
-
-    // --- Event Listeners ---
-
-    // Game Control Listeners
-    canvas.addEventListener('click', () => {
-        if (currentGameState === GAME_STATES.GAMEPLAY) {
-            player.jump();
-        }
-    });
-
-    // Pause functionality (Clicking score bar or a dedicated small area)
-    // For simplicity, let's use the actual HTML pause button
-    // The canvas itself will not have a clickable pause 'icon' in this setup.
-    // Instead, the user clicks the HTML pause button if we add one in gameplay overlay,
-    // or they rely on the pause menu buttons directly.
-
-    // Menu Button Listeners
-    playButton.addEventListener('click', startGame);
-    settingsButton.addEventListener('click', showSettings);
-    // leaderboardsButton.addEventListener('click', () => alert('Leaderboards Coming Soon!')); // Placeholder
-
-    resumeButton.addEventListener('click', resumeGame);
-    restartPauseButton.addEventListener('click', resetGame);
-    mainMenuPauseButton.addEventListener('click', showMainMenu);
-
-    playAgainButton.addEventListener('click', resetGame);
-    mainMenuGameOverButton.addEventListener('click', showMainMenu);
-
-    backSettingsButton.addEventListener('click', backFromSettings);
-
-    // Initial settings values
-    musicVolumeSlider.value = settings.musicVolume * 100;
-    sfxVolumeSlider.value = settings.sfxVolume * 100;
-    vibrationToggle.checked = settings.vibrationEnabled;
-
-    // Settings change listeners
-    musicVolumeSlider.addEventListener('input', (e) => {
-        settings.musicVolume = e.target.value / 100;
-        // console.log('Music Volume:', settings.musicVolume); // For debugging
-        // Implement actual music volume change here
-    });
-    sfxVolumeSlider.addEventListener('input', (e) => {
-        settings.sfxVolume = e.target.value / 100;
-        // console.log('SFX Volume:', settings.sfxVolume); // For debugging
-        // Implement actual SFX volume change here
-    });
-    vibrationToggle.addEventListener('change', (e) => {
-        settings.vibrationEnabled = e.target.checked;
-        // console.log('Vibration Enabled:', settings.vibrationEnabled); // For debugging
-        // Implement actual vibration toggle here
-    });
-
-
-    // --- Responsive Canvas Handling ---
-    function resizeCanvas() {
-        const gameContainer = document.getElementById('game-container');
-        // Set canvas dimensions to match its parent container
-        canvas.width = gameContainer.clientWidth;
-        canvas.height = gameContainer.clientHeight;
-
-        // Re-initialize game elements with new sizes if in gameplay
-        // This handles resizing during play, but a full re-init might be too jarring.
-        // For simple elements like player/ground/score bar, re-calculate positions and sizes.
-        if (player) {
-            const playerWidth = canvas.width * 0.05;
-            const playerHeight = canvas.height * 0.15;
-            const groundHeight = canvas.height * 0.25;
-            const groundY = canvas.height - groundHeight;
-
-            player.width = playerWidth;
-            player.height = playerHeight;
-            player.x = canvas.width * 0.1;
-            player.groundY = groundY - player.height;
-            player.y = Math.min(player.y, player.groundY); // Prevent player from jumping high if canvas shrinks rapidly
-
-            ground.y = groundY;
-            ground.height = groundHeight;
-
-            const scoreBarWidth = canvas.width * 0.2;
-            const scoreBarHeight = canvas.height * 0.03;
-            scoreBar.x = canvas.width * 0.05;
-            scoreBar.y = canvas.height * 0.05;
-            scoreBar.width = scoreBarWidth;
-            scoreBar.height = scoreBarHeight;
-        }
-
-        // Re-draw immediately after resize
-        if (currentGameState === GAME_STATES.GAMEPLAY || currentGameState === GAME_STATES.PAUSED) {
-            draw();
-        }
-    }
-
-    // Call resize on load and when window resizes
-    resizeCanvas();
-    window.addEventListener('resize', resizeCanvas);
-
-    // Initial state: Show main menu
-    showMainMenu();
+// --- Game Setup ---
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+// UI Elements
+const startScreen = document.getElementById('start-screen');
+const gameOverScreen = document.getElementById('game-over-screen');
+const winScreen = document.getElementById('win-screen');
+const startButton = document.getElementById('startButton');
+const restartButton = document.getElementById('restartButton');
+const winRestartButton = document.getElementById('winRestartButton');
+const learnMoreButton = document.getElementById('learnMoreButton');
+const winLearnMoreButton = document.getElementById('winLearnMoreButton');
+const pauseResumeButton = document.getElementById('pauseResumeButton');
+
+const finalScoreText = document.getElementById('finalScoreText');
+const gameOverFact = document.getElementById('gameOverFact');
+
+const scoreJerrycan = document.getElementById('score-jerrycan');
+const jerrycanFill = document.getElementById('jerrycan-fill');
+const scoreText = document.getElementById('score-text');
+const factsTicker = document.getElementById('facts-ticker');
+
+// Game State Variables
+let gameRunning = false;
+let gamePaused = false;
+let score = 0;
+let character;
+let obstacles = [];
+let waterItems = [];
+let animationFrameId; // To control game loop
+
+// Game Constants
+const GRAVITY = 0.5;
+const JUMP_STRENGTH = -12;
+const GAME_SPEED = 4; // Overall scrolling speed
+const WINNING_SCORE = 100; // Liters of water to win
+
+const OBSTACLE_SPAWN_INTERVAL_MIN = 800; // ms
+const OBSTACLE_SPAWN_INTERVAL_MAX = 1800; // ms
+const WATER_ITEM_SPAWN_INTERVAL_MIN = 500; // ms
+const WATER_ITEM_SPAWN_INTERVAL_MAX = 1200; // ms
+
+let lastObstacleTime = 0;
+let lastWaterItemTime = 0;
+
+// Awareness Facts
+const awarenessFacts = [
+    "1 in 10 people lack access to clean water worldwide.",
+    "Women and girls spend 200 million hours a day collecting water.",
+    "Clean water can reduce child mortality by 21%.",
+    "Charity: Water has funded 186,000+ water projects in 29 countries.",
+    "Every $1 invested in water and sanitation yields $4-12 in economic returns.",
+    "100% of public donations to Charity: Water fund clean water projects."
+];
+let currentFactIndex = 0;
+let factTimer = 0;
+const FACT_DISPLAY_TIME = 8000; // ms
+
+// --- Charity: Water Colors ---
+const COLORS = {
+    BLUE: '#2E86DE',
+    YELLOW: '#FFB300',
+    WHITE: '#FFFFFF',
+    DARK_GRAY: '#333333',
+    LIGHT_BLUE_BG: '#E0F2F7',
+    GROUND: '#8B4513' // Sienna for ground
 };
+
+// --- Terrain / Rows Logic ---
+// We'll manage ground segments. Each segment has a startX, endX, and height.
+// The character's y position will snap to the current ground segment.
+let groundSegments = [];
+const MIN_GROUND_HEIGHT = 50; // Minimum height from canvas bottom
+const MAX_GROUND_HEIGHT = 150; // Max height from canvas bottom
+const GROUND_SEGMENT_WIDTH_MIN = 200;
+const GROUND_SEGMENT_WIDTH_MAX = 500;
+const MAX_TERRAIN_DIFFERENCE = 70; // Max difference in height between segments
+
+let currentGroundHeight = MIN_GROUND_HEIGHT; // Initial ground height
+
+function generateNewGroundSegment() {
+    const lastSegment = groundSegments.length > 0 ? groundSegments[groundSegments.length - 1] : null;
+    const startX = lastSegment ? lastSegment.endX : 0;
+    const width = Math.random() * (GROUND_SEGMENT_WIDTH_MAX - GROUND_SEGMENT_WIDTH_MIN) + GROUND_SEGMENT_WIDTH_MIN;
+    const endX = startX + width;
+
+    // Calculate new height, ensuring it's within limits and not too drastic
+    let newHeight;
+    if (lastSegment) {
+        const minH = Math.max(MIN_GROUND_HEIGHT, lastSegment.height - MAX_TERRAIN_DIFFERENCE);
+        const maxH = Math.min(MAX_GROUND_HEIGHT, lastSegment.height + MAX_TERRAIN_DIFFERENCE);
+        newHeight = Math.random() * (maxH - minH) + minH;
+    } else {
+        newHeight = MIN_GROUND_HEIGHT;
+    }
+
+    groundSegments.push({
+        startX: startX,
+        endX: endX,
+        height: newHeight // Height from canvas bottom
+    });
+}
+
+function updateGroundSegments() {
+    // Remove off-screen segments
+    groundSegments = groundSegments.filter(segment => segment.endX > 0);
+
+    // Shift segments to the left
+    groundSegments.forEach(segment => {
+        segment.startX -= GAME_SPEED;
+        segment.endX -= GAME_SPEED;
+    });
+
+    // Add new segments if needed
+    if (groundSegments.length === 0 || groundSegments[groundSegments.length - 1].endX < canvas.width + 100) { // +100 for buffering
+        generateNewGroundSegment();
+    }
+}
+
+function getCurrentGroundHeight(xPos) {
+    for (const segment of groundSegments) {
+        if (xPos >= segment.startX && xPos < segment.endX) {
+            return segment.height;
+        }
+    }
+    // If character is not on a segment (e.g., falling in a gap or off-screen)
+    return -Infinity; // Represents falling
+}
+
+// --- Game Objects ---
+
+// Character object
+function Character() {
+    this.x = 80;
+    this.y = canvas.height - MIN_GROUND_HEIGHT - 60; // Initial Y based on min ground
+    this.width = 40;
+    this.height = 60;
+    this.velocityY = 0;
+    this.isJumping = false;
+    this.groundY = canvas.height - MIN_GROUND_HEIGHT; // The Y position of the ground beneath character's feet
+
+    this.draw = function() {
+        ctx.fillStyle = COLORS.BLUE; // Placeholder character color
+        ctx.fillRect(this.x, this.y, this.width, this.height);
+        // Add more details or use image:
+        // ctx.drawImage(characterImage, this.x, this.y, this.width, this.height);
+    };
+
+    this.update = function() {
+        this.velocityY += GRAVITY;
+        this.y += this.velocityY;
+
+        // Get the ground height at the character's current X position
+        this.groundY = canvas.height - getCurrentGroundHeight(this.x + this.width / 2);
+
+        // Collision with ground
+        if (this.y + this.height >= this.groundY) {
+            this.y = this.groundY - this.height;
+            this.isJumping = false;
+            this.velocityY = 0;
+        }
+
+        // Death condition: falling too far below visible ground or being pushed off-screen left
+        if (this.y > canvas.height + 50 || this.x < -this.width) { // 50px tolerance for falling
+            endGame("stuck");
+        }
+    };
+
+    this.jump = function() {
+        if (!this.isJumping) {
+            this.velocityY = JUMP_STRENGTH;
+            this.isJumping = true;
+        }
+    };
+}
+
+// Obstacle object (e.g., contaminated puddles, sharp rocks)
+function Obstacle(x, y, width, height) {
+    this.x = x;
+    this.y = y;
+    this.width = width;
+    this.height = height;
+    this.isHit = false; // To prevent multiple hits from one obstacle
+
+    this.draw = function() {
+        ctx.fillStyle = COLORS.DARK_GRAY; // Placeholder obstacle color
+        ctx.fillRect(this.x, this.y, this.width, this.height);
+        // Use image:
+        // ctx.drawImage(obstacleImage, this.x, this.y, this.width, this.height);
+    };
+
+    this.update = function() {
+        this.x -= GAME_SPEED;
+    };
+}
+
+// Water Item object (e.g., clean water drops, jerrycans)
+function WaterItem(x, y, width, height, value) {
+    this.x = x;
+    this.y = y;
+    this.width = width;
+    this.height = height;
+    this.value = value || 1; // Default to 1 liter
+
+    this.draw = function() {
+        ctx.fillStyle = COLORS.BLUE; // Placeholder water droplet color
+        ctx.beginPath();
+        ctx.arc(this.x + this.width / 2, this.y + this.height / 2, this.width / 2, 0, Math.PI * 2);
+        ctx.fill();
+        // Use image:
+        // ctx.drawImage(waterDropletImage, this.x, this.y, this.width, this.height);
+    };
+
+    this.update = function() {
+        this.x -= GAME_SPEED;
+    };
+}
+
+// Collision detection (AABB - Axis-Aligned Bounding Box)
+function checkCollision(obj1, obj2) {
+    return obj1.x < obj2.x + obj2.width &&
+           obj1.x + obj1.width > obj2.x &&
+           obj1.y < obj2.y + obj2.height &&
+           obj1.y + obj1.height > obj2.y;
+}
+
+// --- Game Loop and Management ---
+let lastFrameTime = 0;
+
+function gameLoop(currentTime) {
+    if (!gameRunning || gamePaused) {
+        animationFrameId = requestAnimationFrame(gameLoop); // Keep requesting to unpause
+        return;
+    }
+
+    const deltaTime = currentTime - lastFrameTime;
+    lastFrameTime = currentTime;
+
+    // Clear canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = COLORS.LIGHT_BLUE_BG;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Draw Ground
+    ctx.fillStyle = COLORS.GROUND;
+    groundSegments.forEach(segment => {
+        ctx.fillRect(segment.startX, canvas.height - segment.height, segment.endX - segment.startX, segment.height);
+    });
+    updateGroundSegments();
+
+    // Update and draw character
+    character.update();
+    character.draw();
+
+    // Generate Obstacles
+    if (currentTime - lastObstacleTime > Math.random() * (OBSTACLE_SPAWN_INTERVAL_MAX - OBSTACLE_SPAWN_INTERVAL_MIN) + OBSTACLE_SPAWN_INTERVAL_MIN) {
+        const obstacleWidth = Math.random() * (40 - 20) + 20;
+        const obstacleHeight = Math.random() * (50 - 30) + 30;
+        const spawnX = canvas.width;
+        // Spawn on current ground height at spawnX
+        const groundAtSpawnX = getCurrentGroundHeight(spawnX);
+        if (groundAtSpawnX !== -Infinity) { // Only spawn if there's ground
+            obstacles.push(new Obstacle(spawnX, canvas.height - groundAtSpawnX - obstacleHeight, obstacleWidth, obstacleHeight));
+            lastObstacleTime = currentTime;
+        }
+    }
+
+    // Generate Water Items
+    if (currentTime - lastWaterItemTime > Math.random() * (WATER_ITEM_SPAWN_INTERVAL_MAX - WATER_ITEM_SPAWN_INTERVAL_MIN) + WATER_ITEM_SPAWN_INTERVAL_MIN) {
+        const itemSize = 25;
+        const spawnX = canvas.width;
+        // Spawn slightly above ground or floating
+        const groundAtSpawnX = getCurrentGroundHeight(spawnX);
+        if (groundAtSpawnX !== -Infinity) {
+            const spawnY = canvas.height - groundAtSpawnX - itemSize - (Math.random() * 50 + 20); // Random height above ground
+            waterItems.push(new WaterItem(spawnX, spawnY, itemSize, itemSize, Math.round(Math.random() * 2) + 1)); // Collect 1-3 liters
+            lastWaterItemTime = currentTime;
+        }
+    }
+
+    // Update and draw obstacles
+    obstacles.forEach((obstacle, index) => {
+        obstacle.update();
+        obstacle.draw();
+        if (!obstacle.isHit && checkCollision(character, obstacle)) {
+            score = Math.max(0, score - 5); // Lose 5 points, but not below 0
+            updateJerryCan();
+            obstacle.isHit = true; // Mark as hit to prevent repeated penalties
+            // Optionally, add a visual cue for hit (e.g., character flash)
+        }
+        // Remove off-screen obstacles or already hit ones
+        if (obstacle.x + obstacle.width < 0) {
+            obstacles.splice(index, 1);
+        }
+    });
+
+    // Update and draw water items
+    waterItems.forEach((item, index) => {
+        item.update();
+        item.draw();
+        if (checkCollision(character, item)) {
+            score += item.value;
+            updateJerryCan();
+            waterItems.splice(index, 1); // Remove collected item
+        }
+        // Remove off-screen items
+        if (item.x + item.width < 0) {
+            waterItems.splice(index, 1);
+        }
+    });
+
+    // Check Win Condition
+    if (score >= WINNING_SCORE) {
+        winGame();
+        return; // Stop game loop immediately
+    }
+
+    // Update awareness facts ticker
+    factTimer += deltaTime;
+    if (factTimer >= FACT_DISPLAY_TIME) {
+        currentFactIndex = (currentFactIndex + 1) % awarenessFacts.length;
+        factsTicker.textContent = awarenessFacts[currentFactIndex];
+        factTimer = 0;
+    }
+
+    animationFrameId = requestAnimationFrame(gameLoop);
+}
+
+// --- Game Control Functions ---
+function initGame() {
+    score = 0;
+    character = new Character();
+    obstacles = [];
+    waterItems = [];
+    groundSegments = [];
+    lastObstacleTime = performance.now(); // Reset timers
+    lastWaterItemTime = performance.now();
+    currentFactIndex = 0;
+    factTimer = 0;
+    factsTicker.textContent = awarenessFacts[currentFactIndex];
+    updateJerryCan();
+    generateNewGroundSegment(); // Ensure initial ground
+    generateNewGroundSegment(); // Ensure enough ground initially
+}
+
+function startGame() {
+    initGame();
+    startScreen.classList.remove('active');
+    gameOverScreen.classList.remove('active');
+    winScreen.classList.remove('active');
+    gameRunning = true;
+    gamePaused = false;
+    pauseResumeButton.textContent = "Pause";
+    lastFrameTime = performance.now(); // Initialize lastFrameTime
+    animationFrameId = requestAnimationFrame(gameLoop);
+}
+
+function endGame(reason = "obstacle") {
+    gameRunning = false;
+    cancelAnimationFrame(animationFrameId); // Stop the loop
+
+    finalScoreText.textContent = `You collected ${score} liters of water.`;
+    // Select a random awareness fact for the game over screen
+    gameOverFact.textContent = awarenessFacts[Math.floor(Math.random() * awarenessFacts.length)];
+    gameOverScreen.classList.add('active');
+}
+
+function winGame() {
+    gameRunning = false;
+    cancelAnimationFrame(animationFrameId); // Stop the loop
+
+    winScreen.classList.add('active');
+    // Optionally trigger a visual celebration effect
+    console.log("Game Won! Celebration time!");
+}
+
+function togglePauseResume() {
+    if (!gameRunning) return; // Can't pause if game isn't running
+    
+    gamePaused = !gamePaused;
+    if (gamePaused) {
+        pauseResumeButton.textContent = "Resume";
+        // Optionally show a "PAUSED" overlay
+    } else {
+        pauseResumeButton.textContent = "Pause";
+        lastFrameTime = performance.now(); // Reset time to prevent jump after resuming
+        animationFrameId = requestAnimationFrame(gameLoop); // Restart loop
+    }
+}
+
+// --- UI Updates ---
+function updateJerryCan() {
+    const fillPercentage = Math.min(1, score / WINNING_SCORE); // Cap at 100%
+    jerrycanFill.style.height = `${fillPercentage * 100}%`;
+    scoreText.textContent = `${score} L`;
+}
+
+// --- Event Listeners ---
+startButton.addEventListener('click', startGame);
+restartButton.addEventListener('click', startGame);
+winRestartButton.addEventListener('click', startGame);
+
+learnMoreButton.addEventListener('click', () => {
+    window.open('https://www.charitywater.org/', '_blank');
+});
+winLearnMoreButton.addEventListener('click', () => {
+    window.open('https://www.charitywater.org/', '_blank');
+});
+
+pauseResumeButton.addEventListener('click', togglePauseResume);
+
+document.addEventListener('keydown', (e) => {
+    if (e.code === 'Space' && gameRunning && !gamePaused) {
+        character.jump();
+    }
+    if (e.code === 'KeyP') { // 'P' key for pause/resume
+        togglePauseResume();
+    }
+});
+
+// Initialize game on load
+window.onload = () => {
+    startScreen.classList.add('active');
+    // Ensure jerrycan is in position but empty before game starts
+    updateJerryCan();
+};
+// Ensure the canvas is responsive
+window.addEventListener('resize', () => {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    // Reinitialize ground segments to fit new canvas size
+    groundSegments = [];
+    generateNewGroundSegment();
+    generateNewGroundSegment(); // Ensure enough ground initially
+});

@@ -1,51 +1,238 @@
-/* Custom CSS for Water Runner Game */
+:root {
+    --charity-blue: #2E86DE;
+    --charity-yellow: #FFB300;
+    --charity-white: #FFFFFF;
+    --charity-dark-gray: #333333;
+    --charity-light-blue-bg: #E0F2F7; /* Lighter background for game area */
+    --charity-green-success: #4CAF50;
+}
 
-/* Ensure the body uses the Inter font as requested */
 body {
-    font-family: 'Inter', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: var(--charity-blue); /* Main background color */
+    font-family: 'Arial', sans-serif;
+    margin: 0;
+    overflow: hidden;
+    color: var(--charity-dark-gray);
 }
 
-/* Base styles for the game canvas */
-#gameCanvas {
-    background-color: #d1e7f0; /* Light blue background for water theme */
-    border-radius: 0.5rem; /* Rounded corners for the canvas */
-    display: block; /* Remove extra space below canvas */
+#game-wrapper {
+    display: flex;
+    flex-direction: column;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 0 25px rgba(0,0,0,0.3);
+    background-color: var(--charity-white);
 }
 
-/* Styles for game UI overlays (menus, game over screen) */
-.game-overlay {
+/* Header Styling */
+#game-header {
+    background-color: var(--charity-blue);
+    color: var(--charity-white);
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.game-title {
+    margin: 0;
+    font-size: 1.8em;
+    font-weight: bold;
+}
+
+.header-button {
+    background-color: var(--charity-yellow);
+    color: var(--charity-dark-gray);
+    border: none;
+    padding: 8px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1em;
+    transition: background-color 0.2s ease;
+}
+
+.header-button:hover {
+    background-color: #FFC04D; /* Slightly lighter yellow */
+}
+
+/* Game Container & Canvas */
+#game-container {
+    position: relative;
+    width: 900px;
+    height: 450px;
+    background-color: var(--charity-light-blue-bg); /* Sky background */
+    overflow: hidden; /* Crucial for background movement */
+}
+
+canvas {
+    display: block;
+    background-color: transparent; /* Canvas will draw its own background */
+}
+
+/* Game Screens (Start, Game Over, Win) */
+.game-screen {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
+    background-color: rgba(0, 0, 0, 0.85);
+    color: var(--charity-white);
     display: flex;
-    z-index: 10; /* Ensure overlays are on top of the canvas */
-    border-radius: 0.5rem; /* Match container rounded corners */
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 20px;
+    box-sizing: border-box;
+    z-index: 100;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
 }
 
-/* General styling for game buttons */
-.game-button {
-    cursor: pointer;
+.game-screen.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.game-screen h2 {
+    font-size: 2.8em;
+    margin-bottom: 20px;
+    color: var(--charity-yellow);
+}
+
+.game-screen p {
+    font-size: 1.3em;
+    margin-bottom: 30px;
+    line-height: 1.5;
+}
+
+.game-screen button {
+    background-color: var(--charity-blue);
+    color: var(--charity-white);
     border: none;
-    outline: none;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2); /* Soft shadow for buttons */
-    /* Transition properties are mostly handled by Tailwind classes in HTML */
+    padding: 15px 30px;
+    font-size: 1.3em;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.1s ease;
+    margin: 10px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
 }
 
-/* Responsive adjustments for game container aspect ratio */
-@media (min-aspect-ratio: 16/9) {
-    #game-container {
-        height: 90vh; /* Max height on wide screens */
-        width: auto;
-        aspect-ratio: 16 / 9; /* Maintain aspect ratio */
-    }
+.game-screen button:hover {
+    background-color: #2677C5; /* Slightly darker blue */
+    transform: translateY(-2px);
 }
 
-@media (max-aspect-ratio: 16/9) {
-    #game-container {
-        width: 90vw; /* Max width on tall screens */
-        height: auto;
-        aspect-ratio: 16 / 9; /* Maintain aspect ratio */
-    }
+.awareness-info {
+    font-size: 1em;
+    margin-top: 25px;
+    color: #bbb;
 }
+
+/* Win Screen specific styles */
+#win-screen h2.celebration-text {
+    font-size: 3.5em;
+    color: var(--charity-yellow);
+    text-shadow: 0 0 15px rgba(255, 255, 0, 0.7);
+    animation: pulse 1.5s infinite alternate;
+}
+
+.celebration-message {
+    font-size: 1.8em !important;
+    color: var(--charity-white);
+    margin-bottom: 40px !important;
+}
+
+.celebration-icon {
+    width: 100px;
+    height: 100px;
+    margin-bottom: 30px;
+    animation: bounce 0.8s infinite alternate;
+}
+
+@keyframes pulse {
+    from { transform: scale(1); }
+    to { transform: scale(1.05); }
+}
+
+@keyframes bounce {
+    from { transform: translateY(0); }
+    to { transform: translateY(-15px); }
+}
+
+
+/* In-Game UI (Score & Facts) */
+#game-ui {
+    position: absolute;
+    top: 15px;
+    left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 25px;
+    box-sizing: border-box;
+    z-index: 50; /* Above game elements, below screens */
+}
+
+/* Jerry Can Score Bar */
+#score-jerrycan {
+    position: relative;
+    width: 60px; /* Jerry can width */
+    height: 80px; /* Jerry can height */
+    background: url('images/yellow_jerry_can.png') no-repeat center center; /* Use your PNG */
+    background-size: contain;
+    border: 2px solid var(--charity-dark-gray);
+    border-radius: 8px; /* For rounded jerry can bottom */
+    overflow: hidden;
+    display: flex;
+    flex-direction: column-reverse; /* Fill from bottom */
+    align-items: center;
+    justify-content: flex-start;
+    padding-top: 10px; /* Space for spout */
+    box-sizing: border-box;
+    left: 20px; /* Position it near the player */
+    bottom: 20px;
+    transform: translateY(20px); /* Adjust based on character position */
+    opacity: 0.9;
+}
+
+#jerrycan-fill {
+    width: 100%;
+    background-color: var(--charity-blue); /* Color of water filling */
+    transition: height 0.3s ease-out; /* Smooth filling animation */
+    /* Height will be controlled by JS */
+}
+
+#score-text {
+    position: absolute;
+    bottom: 5px;
+    font-size: 0.9em;
+    font-weight: bold;
+    color: var(--charity-dark-gray);
+    background-color: var(--charity-white);
+    padding: 2px 5px;
+    border-radius: 3px;
+    z-index: 1; /* Above fill */
+}
+
+#facts-ticker {
+    background-color: rgba(255, 255, 255, 0.8);
+    padding: 8px 15px;
+    border-radius: 20px;
+    max-width: 40%;
+    text-align: right;
+    font-size: 0.9em;
+    color: var(--charity-dark-gray);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+/* Basic Character & Item Placeholders (will be drawn on canvas) */
+/* The actual drawing is in JS, but these indicate how they might look */

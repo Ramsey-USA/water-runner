@@ -3,93 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Water Runner</title>
-    <!-- Tailwind CSS CDN for utility classes -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
-    <!-- Custom CSS for game-specific styling -->
+    <title>Water Journey - Charity: Water</title>
     <link rel="stylesheet" href="style.css">
 </head>
-<body class="bg-gray-100 flex flex-col items-center justify-center min-h-screen font-inter p-4 overflow-hidden">
-    <!-- Main game container -->
-    <div id="game-container" class="relative rounded-lg shadow-2xl bg-white overflow-hidden max-w-full lg:max-w-4xl xl:max-w-6xl w-full h-auto aspect-video">
-        <canvas id="gameCanvas" class="w-full h-full block"></canvas>
-
-        <!-- Game UI Overlays -->
-
-        <!-- Main Menu Screen -->
-        <div id="mainMenu" class="game-overlay bg-blue-500 bg-opacity-90 flex flex-col items-center justify-center p-8 text-white space-y-6">
-            <h1 class="text-5xl lg:text-7xl font-bold text-center drop-shadow-lg rounded-md p-4 mb-8">
-                WATER RUNNER
-            </h1>
-            <button id="playButton" class="game-button bg-green-500 hover:bg-green-600 text-white font-bold py-4 px-10 rounded-full shadow-lg transition-transform transform hover:scale-105 active:scale-95">
-                PLAY
-            </button>
-            <button id="settingsButton" class="game-button bg-gray-700 hover:bg-gray-800 text-white font-bold py-3 px-8 rounded-full shadow-md transition-transform transform hover:scale-105 active:scale-95">
-                SETTINGS
-            </button>
-            <button id="leaderboardsButton" class="game-button bg-gray-700 hover:bg-gray-800 text-white font-bold py-3 px-8 rounded-full shadow-md transition-transform transform hover:scale-105 active:scale-95">
-                LEADERBOARDS
-            </button>
-
-            <!-- Charity Water branding on Main Menu -->
-            <div class="absolute bottom-4 left-0 right-0 text-center text-sm px-4">
-                <p class="text-yellow-300 font-semibold drop-shadow-md">
-                    Proudly supporting <span class="text-blue-200">charity: water</span>
-                </p>
+<body>
+    <div id="game-wrapper">
+        <header id="game-header">
+            <h1 class="game-title">The Water Journey</h1>
+            <div class="header-controls">
+                <button id="pauseResumeButton" class="header-button">Pause</button>
             </div>
-        </div>
+        </header>
 
-        <!-- Pause Menu Screen -->
-        <div id="pauseMenu" class="game-overlay bg-black bg-opacity-75 flex-col items-center justify-center p-8 text-white space-y-6 hidden">
-            <h2 class="text-4xl lg:text-5xl font-bold text-center mb-8 drop-shadow-lg">PAUSED</h2>
-            <button id="resumeButton" class="game-button bg-blue-500 hover:bg-blue-600 text-white font-bold py-4 px-10 rounded-full shadow-lg transition-transform transform hover:scale-105 active:scale-95">
-                RESUME
-            </button>
-            <button id="restartPauseButton" class="game-button bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-8 rounded-full shadow-md transition-transform transform hover:scale-105 active:scale-95">
-                RESTART
-            </button>
-            <button id="mainMenuPauseButton" class="game-button bg-gray-700 hover:bg-gray-800 text-white font-bold py-3 px-8 rounded-full shadow-md transition-transform transform hover:scale-105 active:scale-95">
-                MAIN MENU
-            </button>
-        </div>
+        <div id="game-container">
+            <canvas id="gameCanvas" width="900" height="450"></canvas>
+            
+            <div id="start-screen" class="game-screen active">
+                <h2>The Water Journey</h2>
+                <p>Millions walk daily for water. Help deliver clean water!</p>
+                <button id="startButton">Start Journey</button>
+                <p class="awareness-info">100% of Charity: Water's public donations fund clean water projects.</p>
+            </div>
 
-        <!-- Game Over / Win Screen -->
-        <div id="gameOverWinScreen" class="game-overlay bg-black bg-opacity-75 flex-col items-center justify-center p-8 text-white space-y-6 hidden">
-            <h2 id="resultText" class="text-4xl lg:text-6xl font-bold text-center mb-8 drop-shadow-lg"></h2>
-            <p id="finalScoreText" class="text-2xl lg:text-3xl mb-6"></p>
-            <button id="playAgainButton" class="game-button bg-green-500 hover:bg-green-600 text-white font-bold py-4 px-10 rounded-full shadow-lg transition-transform transform hover:scale-105 active:scale-95">
-                PLAY AGAIN
-            </button>
-            <button id="mainMenuGameOverButton" class="game-button bg-gray-700 hover:bg-gray-800 text-white font-bold py-3 px-8 rounded-full shadow-md transition-transform transform hover:scale-105 active:scale-95">
-                MAIN MENU
-            </button>
-            <a id="charityLink" href="https://www.charitywater.org/" target="_blank" class="game-button bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-8 rounded-full shadow-md mt-6 transition-transform transform hover:scale-105 active:scale-95">
-                Visit charity: water
-            </a>
-        </div>
+            <div id="game-over-screen" class="game-screen">
+                <h2>Journey Ended!</h2>
+                <p id="finalScoreText">You collected 0 liters of water.</p>
+                <p id="gameOverFact">Did you know: Access to clean water saves lives?</p>
+                <button id="restartButton">Restart Journey</button>
+                <button id="learnMoreButton">Learn More about Charity: Water</button>
+            </div>
 
-        <!-- Settings Screen -->
-        <div id="settingsScreen" class="game-overlay bg-gray-800 bg-opacity-90 flex-col items-center justify-center p-8 text-white space-y-6 hidden">
-            <h2 class="text-4xl lg:text-5xl font-bold text-center mb-8 drop-shadow-lg">SETTINGS</h2>
-            <div class="flex flex-col items-center space-y-4">
-                <label for="musicVolume" class="text-xl">Music Volume:</label>
-                <input type="range" id="musicVolume" min="0" max="100" value="50" class="w-full max-w-xs accent-blue-500">
-                <label for="sfxVolume" class="text-xl">SFX Volume:</label>
-                <input type="range" id="sfxVolume" min="0" max="100" value="75" class="w-full max-w-xs accent-blue-500">
-                <div class="flex items-center space-x-2">
-                    <input type="checkbox" id="vibrationToggle" checked class="form-checkbox h-5 w-5 text-blue-600 rounded-md">
-                    <label for="vibrationToggle" class="text-lg">Vibration Feedback</label>
+            <div id="win-screen" class="game-screen">
+                <h2 class="celebration-text">JOURNEY COMPLETE!</h2>
+                <p class="celebration-message">You successfully delivered clean water!</p>
+                <img src="https://via.placeholder.com/100x100/FFB300/FFFFFF?text=🎉" alt="Celebration Icon" class="celebration-icon">
+                <button id="winRestartButton">Play Again</button>
+                <button id="winLearnMoreButton">Support Clean Water</button>
+            </div>
+
+            <div id="game-ui">
+                <div id="score-jerrycan">
+                    <div id="jerrycan-fill"></div>
+                    <span id="score-text">0 L</span>
                 </div>
+                <div id="facts-ticker"></div>
             </div>
-            <button id="backSettingsButton" class="game-button bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-8 rounded-full shadow-md transition-transform transform hover:scale-105 active:scale-95 mt-8">
-                BACK
-            </button>
         </div>
-
     </div>
-
-    <!-- The main game JavaScript file -->
     <script src="script.js"></script>
 </body>
 </html>
