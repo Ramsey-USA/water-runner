@@ -9,8 +9,8 @@ const images = {
     obstaclePipe: 'images/obstacle_pipe.png',
     obstacleSeagull: 'images/obstacle_seagull.png',
     waterDrop: 'images/water_drop.png',
-    waterBarrel: 'images/water_barrel.png',
-    userSprite: 'images/user_sprite.png' // Added player sprite
+    yellowJerryCan: 'images/yellow_jerry_can.png', // Use yellow jerry can for barrel
+    userSprite: 'images/user_sprite.png'
 };
 const loadedImages = {};
 for (const [key, src] of Object.entries(images)) {
@@ -217,8 +217,8 @@ function WaterItem(x, y, width, height, type = 'drop') {
     this.value = 5;
 
     this.draw = function() {
-        if (this.type === 'barrel' && loadedImages.waterBarrel.complete && loadedImages.waterBarrel.naturalWidth !== 0) {
-            ctx.drawImage(loadedImages.waterBarrel, this.x, this.y, this.width, this.height);
+        if (this.type === 'barrel' && loadedImages.yellowJerryCan.complete && loadedImages.yellowJerryCan.naturalWidth !== 0) {
+            ctx.drawImage(loadedImages.yellowJerryCan, this.x, this.y, this.width, this.height);
         } else if (this.type === 'drop' && loadedImages.waterDrop.complete && loadedImages.waterDrop.naturalWidth !== 0) {
             ctx.drawImage(loadedImages.waterDrop, this.x, this.y, this.width, this.height);
         } else {
@@ -465,9 +465,16 @@ window.onload = () => {
     startScreen.classList.add('active');
     updateJerryCan();
 };
+function resizeGame() {
+    // Match canvas size to container
+    const container = document.getElementById('game-container');
+    const rect = container.getBoundingClientRect();
+    canvas.width = rect.width;
+    canvas.height = rect.height;
+}
+resizeGame();
 window.addEventListener('resize', () => {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    resizeGame();
     groundSegments = [];
     generateNewGroundSegment();
     generateNewGroundSegment();

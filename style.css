@@ -30,7 +30,8 @@ h1, h2, h3, h4, h5, h6 {
 
 .game-title {
     margin: 0;
-    font-size: 2.2em;
+    font-size: 2.2vw;
+    min-font-size: 1.2em;
     font-weight: 900;
     letter-spacing: 0.04em;
     text-shadow: 0 2px 8px rgba(46,134,222,0.10), 0 1px 0 #fff;
@@ -39,41 +40,70 @@ h1, h2, h3, h4, h5, h6 {
 #game-header {
     background-color: var(--charity-blue);
     color: var(--charity-white);
-    padding: 15px 20px;
+    padding: 1.5vw 2vw;
     display: flex;
     justify-content: space-between;
     align-items: center;
     font-family: 'Montserrat', 'Arial', sans-serif;
     font-size: 1.1em;
     letter-spacing: 0.02em;
+    width: 100%;
+    box-sizing: border-box;
+    max-width: 900px;
+    margin: 0 auto;
+    transition: padding 0.2s, font-size 0.2s;
 }
 
-.header-button {
-    background-color: var(--charity-yellow);
+.header-button,
+#startButton {
+    background: linear-gradient(90deg, var(--charity-yellow) 60%, #ffe082 100%);
     color: var(--charity-dark-gray);
     border: none;
-    padding: 8px 15px;
-    border-radius: 5px;
+    padding: 14px 32px;
+    font-size: 1.15em;
+    border-radius: 24px;
     cursor: pointer;
-    font-size: 1em;
-    font-weight: 600;
-    transition: background-color 0.2s ease;
+    font-family: 'Montserrat', 'Arial', sans-serif;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    box-shadow: 0 4px 18px rgba(255,179,0,0.13), 0 2px 8px rgba(46,134,222,0.10);
+    transition: background 0.2s, transform 0.1s, box-shadow 0.2s, color 0.2s;
+    outline: none;
+    margin: 0 6px;
 }
 
-.header-button:hover {
-    background-color: #FFC04D;
+.header-button:hover,
+#startButton:hover {
+    background: linear-gradient(90deg, #ffd54f 60%, var(--charity-yellow) 100%);
+    color: #fff;
+    transform: translateY(-2px) scale(1.04);
+    box-shadow: 0 8px 28px rgba(255,179,0,0.18), 0 4px 16px rgba(46,134,222,0.13);
+}
+
+.header-button:active,
+#startButton:active {
+    background: var(--charity-yellow);
+    color: var(--charity-dark-gray);
+    transform: scale(0.98);
 }
 
 #game-container {
     position: relative;
-    width: 900px;
-    height: 450px;
+    width: 90vw;
+    max-width: 900px;
+    height: 50vw;
+    max-height: 450px;
+    min-width: 320px;
+    min-height: 200px;
     background-color: var(--charity-light-blue-bg);
     overflow: hidden;
+    box-sizing: border-box;
 }
 
 canvas {
     display: block;
+    width: 100% !important;
+    height: 100% !important;
     background-color: transparent;
 }
 
@@ -170,33 +200,38 @@ canvas {
 
 #game-ui {
     position: absolute;
-    top: 15px;
+    top: 1.5vw;
     left: 0;
     width: 100%;
     display: flex;
     flex-direction: row;
     justify-content: flex-start;
-    align-items: flex-start; /* Align to top for better cloud alignment */
-    padding: 0 25px;
+    align-items: flex-start;
+    padding: 0 2vw;
     box-sizing: border-box;
     z-index: 50;
     font-family: 'Montserrat', 'Arial', sans-serif;
     font-size: 1em;
     letter-spacing: 0.02em;
-    gap: 18px;
-    pointer-events: none; /* Prevent accidental clicks on UI overlay */
+    gap: 2vw;
+    pointer-events: none;
 }
 
 #score-jerrycan {
     position: relative;
-    width: 100px;
-    height: 130px;
+    width: 10vw;
+    max-width: 100px;
+    min-width: 48px;
+    height: 13vw;
+    max-height: 130px;
+    min-height: 62px;
     background: url('images/yellow_jerry_can.png') no-repeat center center;
     background-size: contain;
     border: 2px solid var(--charity-dark-gray);
     border-radius: 8px;
     overflow: hidden;
-    margin-right: 18px;
+    margin-right: 2vw;
+    box-sizing: border-box;
 }
 
 #jerrycan-fill {
@@ -214,13 +249,13 @@ canvas {
 #score-text {
     position: absolute;
     left: 50%;
-    bottom: 8px;
+    bottom: 8%;
     transform: translateX(-50%);
-    font-size: 1.2em;
+    font-size: 1.1em;
     font-weight: 900;
     color: #222;
     background: rgba(255,255,255,0.82);
-    padding: 3px 10px 2px 10px;
+    padding: 0.3em 1em 0.2em 1em;
     border-radius: 12px;
     z-index: 2;
     text-shadow: 0 2px 8px rgba(255,255,255,0.22), 0 1px 0 #fff, 0 0 2px #fff;
@@ -237,19 +272,19 @@ canvas {
     display: flex;
     align-items: center;
     flex: 1 1 0;
-    min-width: 340px;
-    min-height: 60px;
-    padding: 28px 60px 28px 60px;
+    min-width: 80px;
+    min-height: 28px;
+    padding: 1vw 2vw;
     margin: 0;
     background: #fff;
     color: var(--charity-dark-gray);
     font-family: 'Montserrat', 'Arial', sans-serif;
-    font-size: 1.13em;
+    font-size: 0.92em;
     font-weight: 500;
     letter-spacing: 0.01em;
     text-align: left;
-    box-shadow: 0 8px 32px rgba(46,134,222,0.13), 0 2px 8px rgba(76,175,80,0.10);
-    border-radius: 60% 80% 70% 80% / 80% 70% 80% 60%;
+    box-shadow: 0 4px 16px rgba(46,134,222,0.10), 0 1px 4px rgba(76,175,80,0.08);
+    border-radius: 50% 70% 60% 70% / 70% 60% 70% 50%;
     overflow: visible;
     z-index: 1;
 }
@@ -257,60 +292,104 @@ canvas {
 #facts-ticker .cloud-circle {
     position: absolute;
     background: #fff;
-    opacity: 0.95;
+    opacity: 0.93;
     z-index: 0;
     pointer-events: none;
-    box-shadow: 0 4px 18px 0 rgba(46,134,222,0.08);
+    box-shadow: 0 2px 8px 0 rgba(46,134,222,0.06);
 }
 
 #facts-ticker .cloud1 {
-    width: 70px;
-    height: 70px;
-    left: -40px;
-    top: 18px;
-    border-radius: 50%;
+    width: 3vw; min-width: 14px; max-width: 30px;
+    height: 3vw; min-height: 14px; max-height: 30px;
+    left: -2vw; top: 0.5vw; border-radius: 50%;
 }
-
 #facts-ticker .cloud2 {
-    width: 50px;
-    height: 50px;
-    left: 30px;
-    top: -30px;
-    border-radius: 50%;
+    width: 2vw; min-width: 10px; max-width: 20px;
+    height: 2vw; min-height: 10px; max-height: 20px;
+    left: 1vw; top: -1.5vw; border-radius: 50%;
 }
-
 #facts-ticker .cloud3 {
-    width: 60px;
-    height: 60px;
-    right: 10px;
-    top: -35px;
-    border-radius: 50%;
+    width: 2.5vw; min-width: 12px; max-width: 24px;
+    height: 2.5vw; min-height: 12px; max-height: 24px;
+    right: 0.5vw; top: -1.8vw; border-radius: 50%;
 }
-
 #facts-ticker .cloud4 {
-    width: 40px;
-    height: 40px;
-    right: -30px;
-    top: 30px;
-    border-radius: 50%;
-    opacity: 0.85;
+    width: 1.7vw; min-width: 8px; max-width: 16px;
+    height: 1.7vw; min-height: 8px; max-height: 16px;
+    right: -1.2vw; top: 1.2vw; border-radius: 50%; opacity: 0.85;
 }
-
 #facts-ticker .cloud5 {
-    width: 35px;
-    height: 35px;
-    left: 60%;
-    bottom: -20px;
-    border-radius: 50%;
-    opacity: 0.8;
+    width: 1.5vw; min-width: 7px; max-width: 14px;
+    height: 1.5vw; min-height: 7px; max-height: 14px;
+    left: 60%; bottom: -1vw; border-radius: 50%; opacity: 0.8;
 }
 
-/* Ensure the text is above the cloud circles */
 #facts-ticker span.fact-text {
     position: relative;
     z-index: 2;
     width: 100%;
+    font-size: 1em;
+    word-break: break-word;
 }
 
-/* Basic Character & Item Placeholders (will be drawn on canvas) */
-/* The actual drawing is in JS, but these indicate how they might look */
+#win-screen .game-screen-buttons,
+#game-over-screen .game-screen-buttons {
+    display: flex;
+    gap: 18px;
+    justify-content: center;
+    margin-top: 18px;
+}
+
+#win-screen button,
+#game-over-screen button {
+    background: linear-gradient(90deg, var(--charity-yellow) 60%, #ffe082 100%);
+    color: var(--charity-dark-gray);
+    border: none;
+    padding: 14px 32px;
+    font-size: 1.15em;
+    border-radius: 24px;
+    cursor: pointer;
+    font-family: 'Montserrat', 'Arial', sans-serif;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    box-shadow: 0 4px 18px rgba(255,179,0,0.13), 0 2px 8px rgba(46,134,222,0.10);
+    transition: background 0.2s, transform 0.1s, box-shadow 0.2s, color 0.2s;
+    outline: none;
+    margin: 0 6px;
+}
+
+#win-screen button:hover,
+#game-over-screen button:hover {
+    background: linear-gradient(90deg, #ffd54f 60%, var(--charity-yellow) 100%);
+    color: #fff;
+    transform: translateY(-2px) scale(1.04);
+    box-shadow: 0 8px 28px rgba(255,179,0,0.18), 0 4px 16px rgba(46,134,222,0.13);
+}
+
+#win-screen button:active,
+#game-over-screen button:active {
+    background: var(--charity-yellow);
+    color: var(--charity-dark-gray);
+    transform: scale(0.98);
+}
+
+/* Responsive UI for smaller screens */
+@media (max-width: 900px) {
+    #game-header {
+        padding: 2vw 2vw;
+        font-size: 1em;
+    }
+    .game-title {
+        font-size: 4vw;
+    }
+}
+
+@media (max-width: 600px) {
+    #game-header {
+        padding: 2vw 1vw;
+        font-size: 0.95em;
+    }
+    .game-title {
+        font-size: 5vw;
+    }
+}
