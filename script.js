@@ -47,7 +47,7 @@ let lastFrameTime = 0;
 // --- Game Constants ---
 const GRAVITY = 0.5;
 const JUMP_STRENGTH = -12;
-const GAME_SPEED = 4;
+let GAME_SPEED = 7; // Start at 7
 const WINNING_SCORE = 100;
 const OBSTACLE_SPAWN_INTERVAL_MIN = 800;
 const OBSTACLE_SPAWN_INTERVAL_MAX = 1800;
@@ -103,11 +103,11 @@ function generateNewGroundSegment() {
     groundSegments.push({ startX, endX, height: newHeight });
 }
 
-function updateGroundSegments() {
+function updateGroundSegments(dt = 1) {
     groundSegments = groundSegments.filter(segment => segment.endX > 0);
     groundSegments.forEach(segment => {
-        segment.startX -= GAME_SPEED;
-        segment.endX -= GAME_SPEED;
+        segment.startX -= GAME_SPEED * dt;
+        segment.endX -= GAME_SPEED * dt;
     });
     if (groundSegments.length === 0 || groundSegments[groundSegments.length - 1].endX < canvas.width + 100) {
         generateNewGroundSegment();
@@ -158,9 +158,9 @@ function Character() {
         }
     };
 
-    this.update = function() {
-        this.velocityY += GRAVITY;
-        this.y += this.velocityY;
+    this.update = function(dt = 1) {
+        this.velocityY += GRAVITY * dt;
+        this.y += this.velocityY * dt;
         this.groundY = canvas.height - getCurrentGroundHeight(this.x + this.width / 2);
         if (this.y + this.height >= this.groundY) {
             this.y = this.groundY - this.height;
@@ -201,8 +201,8 @@ function Obstacle(x, y, width, height, type) {
         }
     };
 
-    this.update = function() {
-        this.x -= GAME_SPEED;
+    this.update = function(dt = 1) {
+        this.x -= GAME_SPEED * dt;
     };
 }
 
@@ -213,7 +213,7 @@ function WaterItem(x, y, width, height, type = 'drop') {
     this.height = height;
     this.collected = false;
     this.type = type; // 'drop' or 'barrel'
-    this.value = 5;
+    this.value = (type === 'barrel') ? 5 : 1; // Jerry can: +5, Droplet: +1
 
     this.draw = function() {
         if (this.type === 'barrel' && loadedImages.yellowJerryCan.complete && loadedImages.yellowJerryCan.naturalWidth !== 0) {
@@ -228,8 +228,8 @@ function WaterItem(x, y, width, height, type = 'drop') {
         }
     };
 
-    this.update = function() {
-        this.x -= GAME_SPEED;
+    this.update = function(dt = 1) {
+        this.x -= GAME_SPEED * dt;
     };
 }
 
@@ -242,19 +242,21 @@ function checkCollision(obj1, obj2) {
 
 // --- Game Loop ---
 function gameLoop(currentTime) {
-    if (!gameRunning || gamePaused) {
-        animationFrameId = requestAnimationFrame(gameLoop);
-        return;
-    }
-    const deltaTime = currentTime - lastFrameTime;
+    if (!gameRunning || gamePaused) return;
+
+    // Calculate delta time (dt)
+    const deltaTime = currentTime - lastFrameTime || 16.67;
     lastFrameTime = currentTime;
+    const dt = deltaTime / 16.67; // 1 at 60fps
 
     // Draw background
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = COLORS.LIGHT_BLUE_BG;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Draw ground
+    // Draw and update ground
+    updateGroundSegments(dt);
+
     groundSegments.forEach(segment => {
         if (loadedImages.groundTexture.complete && loadedImages.groundTexture.naturalWidth !== 0) {
             ctx.drawImage(
@@ -269,10 +271,9 @@ function gameLoop(currentTime) {
             ctx.fillRect(segment.startX, canvas.height - segment.height, segment.endX - segment.startX, segment.height);
         }
     });
-    updateGroundSegments();
 
     // Character
-    character.update();
+    character.update(dt);
     character.draw();
 
     // Obstacles
@@ -329,10 +330,10 @@ function gameLoop(currentTime) {
     // Update/draw obstacles
     for (let i = obstacles.length - 1; i >= 0; i--) {
         const obstacle = obstacles[i];
-        obstacle.update();
+        obstacle.update(dt);
         obstacle.draw();
         if (!obstacle.isHit && checkCollision(character, obstacle)) {
-            score = Math.max(0, score - 5);
+            score = Math.max(0, score - 3); // Obstacles: -3
             updateJerryCan();
             obstacle.isHit = true;
         }
@@ -344,10 +345,10 @@ function gameLoop(currentTime) {
     // Update/draw water items
     for (let i = waterItems.length - 1; i >= 0; i--) {
         const item = waterItems[i];
-        item.update();
+        item.update(dt);
         item.draw();
         if (checkCollision(character, item)) {
-            score = Math.max(0, score + item.value);
+            score = Math.max(0, score + item.value); // Use item.value (+1 or +5)
             updateJerryCan();
             waterItems.splice(i, 1);
         } else if (item.x + item.width < 0) {
@@ -427,11 +428,24 @@ function togglePauseResume() {
     }
 }
 
+function getGameSpeedForScore(score) {
+    if (score <= 20) return 7;
+    if (score <= 40) return 9;
+    if (score <= 60) return 11;
+    if (score <= 80) return 13;
+    return 15;
+}
+
+function updateGameSpeed() {
+    GAME_SPEED = getGameSpeedForScore(score);
+}
+
 // --- UI Updates ---
 function updateJerryCan() {
     const fillPercentage = Math.min(1, score / WINNING_SCORE);
     jerrycanFill.style.height = `${fillPercentage * 100}%`;
     scoreText.textContent = `${score} L`;
+    updateGameSpeed();
 }
 
 // --- Responsive Canvas ---
