@@ -9,7 +9,7 @@ const images = {
     obstaclePipe: 'images/obstacle_pipe.png',
     obstacleSeagull: 'images/obstacle_seagull.png',
     waterDrop: 'images/water_drop.png',
-    yellowJerryCan: 'images/yellow_jerry_can.png', // Use yellow jerry can for barrel
+    yellowJerryCan: 'images/yellow_jerry_can.png',
     userSprite: 'images/user_sprite.png'
 };
 const loadedImages = {};
@@ -30,10 +30,9 @@ const winLearnMoreButton = document.getElementById('winLearnMoreButton');
 const pauseResumeButton = document.getElementById('pauseResumeButton');
 const finalScoreText = document.getElementById('finalScoreText');
 const gameOverFact = document.getElementById('gameOverFact');
-const scoreJerrycan = document.getElementById('score-jerrycan');
-const jerrycanFill = document.getElementById('jerrycan-fill');
 const scoreText = document.getElementById('score-text');
-const factsTicker = document.getElementById('facts-ticker');
+const jerrycanFill = document.getElementById('jerrycan-fill');
+const factsTicker = document.querySelector('#facts-ticker .fact-text');
 
 // --- Game State Variables ---
 let gameRunning = false;
@@ -414,8 +413,6 @@ function winGame() {
     gameRunning = false;
     cancelAnimationFrame(animationFrameId);
     winScreen.classList.add('active');
-    // Optionally trigger a visual celebration effect
-    console.log("Game Won! Celebration time!");
 }
 
 function togglePauseResume() {
@@ -436,6 +433,21 @@ function updateJerryCan() {
     jerrycanFill.style.height = `${fillPercentage * 100}%`;
     scoreText.textContent = `${score} L`;
 }
+
+// --- Responsive Canvas ---
+function resizeGame() {
+    const container = document.getElementById('game-container');
+    const rect = container.getBoundingClientRect();
+    canvas.width = rect.width;
+    canvas.height = rect.height;
+}
+resizeGame();
+window.addEventListener('resize', () => {
+    resizeGame();
+    groundSegments = [];
+    generateNewGroundSegment();
+    generateNewGroundSegment();
+});
 
 // --- Event Listeners ---
 startButton.addEventListener('click', startGame);
@@ -465,17 +477,3 @@ window.onload = () => {
     startScreen.classList.add('active');
     updateJerryCan();
 };
-function resizeGame() {
-    // Match canvas size to container
-    const container = document.getElementById('game-container');
-    const rect = container.getBoundingClientRect();
-    canvas.width = rect.width;
-    canvas.height = rect.height;
-}
-resizeGame();
-window.addEventListener('resize', () => {
-    resizeGame();
-    groundSegments = [];
-    generateNewGroundSegment();
-    generateNewGroundSegment();
-});

@@ -10,31 +10,40 @@
 <body>
     <div id="game-wrapper">
         <header id="game-header">
-            <h1 class="game-title">The Water Journey</h1>
+            <div id="score-jerrycan">
+                <div id="jerrycan-fill"></div>
+                <img id="jerrycan-img" src="images/yellow_jerry_can.png" alt="Jerry Can" draggable="false">
+                <span id="score-text">0 L</span>
+            </div>
+            <h1 class="game-title">
+                <a href="https://www.charitywater.org/" target="_blank" rel="noopener" class="charity-link">The Water Journey</a>
+            </h1>
             <div class="header-controls">
                 <button id="pauseResumeButton" class="header-button">Pause</button>
             </div>
         </header>
 
-        <div id="game-container">
+        <main id="game-container">
             <canvas id="gameCanvas" width="900" height="450"></canvas>
-            
-            <div id="start-screen" class="game-screen active">
+
+            <section id="start-screen" class="game-screen active">
                 <h2>The Water Journey</h2>
                 <p>Millions walk daily for water. Help deliver clean water!</p>
                 <button id="startButton">Start Journey</button>
                 <p class="awareness-info">100% of Charity: Water's public donations fund clean water projects.</p>
-            </div>
+            </section>
 
-            <div id="game-over-screen" class="game-screen">
+            <section id="game-over-screen" class="game-screen">
                 <h2>Journey Ended!</h2>
                 <p id="finalScoreText">You collected 0 liters of water.</p>
                 <p id="gameOverFact">Did you know: Access to clean water saves lives?</p>
-                <button id="restartButton">Restart Journey</button>
-                <button id="learnMoreButton">Learn More about Charity: Water</button>
-            </div>
+                <div class="game-screen-buttons">
+                    <button id="restartButton">Restart Journey</button>
+                    <button id="learnMoreButton">Learn More about Charity: Water</button>
+                </div>
+            </section>
 
-            <div id="win-screen" class="game-screen">
+            <section id="win-screen" class="game-screen">
                 <h2 class="celebration-text">JOURNEY COMPLETE!</h2>
                 <p class="celebration-message">You successfully delivered clean water!</p>
                 <img src="images/celebration_icon.png" alt="Celebration Icon" class="celebration-icon">
@@ -42,23 +51,19 @@
                     <button id="winRestartButton">Play Again</button>
                     <button id="winLearnMoreButton">Learn More</button>
                 </div>
-            </div>
+            </section>
 
             <div id="game-ui">
-                <div id="score-jerrycan">
-                    <div id="jerrycan-fill"></div>
-                    <span id="score-text">0 L</span>
-                </div>
                 <div id="facts-ticker">
                     <span class="cloud-circle cloud1"></span>
                     <span class="cloud-circle cloud2"></span>
                     <span class="cloud-circle cloud3"></span>
                     <span class="cloud-circle cloud4"></span>
                     <span class="cloud-circle cloud5"></span>
-                    <span class="fact-text"><!-- Fact text will be injected here by JS --></span>
+                    <span class="fact-text"></span>
                 </div>
             </div>
-        </div>
+        </main>
     </div>
     <script src="script.js"></script>
 </body>
