@@ -9,7 +9,8 @@ const images = {
     obstaclePipe: 'images/obstacle_pipe.png',
     obstacleSeagull: 'images/obstacle_seagull.png',
     waterDrop: 'images/water_drop.png',
-    waterBarrel: 'images/water_barrel.png'
+    waterBarrel: 'images/water_barrel.png',
+    userSprite: 'images/user_sprite.png' // Added player sprite
 };
 const loadedImages = {};
 for (const [key, src] of Object.entries(images)) {
@@ -146,8 +147,16 @@ function Character() {
     this.groundY = canvas.height - MIN_GROUND_HEIGHT;
 
     this.draw = function() {
-        ctx.fillStyle = COLORS.BLUE;
-        ctx.fillRect(this.x, this.y, this.width, this.height);
+        if (
+            loadedImages.userSprite &&
+            loadedImages.userSprite.complete &&
+            loadedImages.userSprite.naturalWidth !== 0
+        ) {
+            ctx.drawImage(loadedImages.userSprite, this.x, this.y, this.width, this.height);
+        } else {
+            ctx.fillStyle = COLORS.BLUE;
+            ctx.fillRect(this.x, this.y, this.width, this.height);
+        }
     };
 
     this.update = function() {

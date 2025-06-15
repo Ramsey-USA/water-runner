@@ -12,23 +12,30 @@ body {
     justify-content: center;
     align-items: center;
     min-height: 100vh;
-    background-color: var(--charity-blue); /* Main background color */
-    font-family: 'Arial', sans-serif;
+    background-color: var(--charity-green-success);
+    font-family: 'Montserrat', 'Arial', sans-serif;
     margin: 0;
     overflow: hidden;
     color: var(--charity-dark-gray);
+    letter-spacing: 0.01em; /* Slightly reduced for clarity */
 }
 
-#game-wrapper {
-    display: flex;
-    flex-direction: column;
-    border-radius: 10px;
-    overflow: hidden;
-    box-shadow: 0 0 25px rgba(0,0,0,0.3);
-    background-color: var(--charity-white);
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Montserrat', 'Arial', sans-serif;
+    font-weight: 800; /* Bolder for headings */
+    letter-spacing: 0.03em;
+    margin-top: 0.3em;
+    margin-bottom: 0.3em;
 }
 
-/* Header Styling */
+.game-title {
+    margin: 0;
+    font-size: 2.2em;
+    font-weight: 900;
+    letter-spacing: 0.04em;
+    text-shadow: 0 2px 8px rgba(46,134,222,0.10), 0 1px 0 #fff;
+}
+
 #game-header {
     background-color: var(--charity-blue);
     color: var(--charity-white);
@@ -36,12 +43,9 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-}
-
-.game-title {
-    margin: 0;
-    font-size: 1.8em;
-    font-weight: bold;
+    font-family: 'Montserrat', 'Arial', sans-serif;
+    font-size: 1.1em;
+    letter-spacing: 0.02em;
 }
 
 .header-button {
@@ -52,28 +56,27 @@ body {
     border-radius: 5px;
     cursor: pointer;
     font-size: 1em;
+    font-weight: 600;
     transition: background-color 0.2s ease;
 }
 
 .header-button:hover {
-    background-color: #FFC04D; /* Slightly lighter yellow */
+    background-color: #FFC04D;
 }
 
-/* Game Container & Canvas */
 #game-container {
     position: relative;
     width: 900px;
     height: 450px;
-    background-color: var(--charity-light-blue-bg); /* Sky background */
-    overflow: hidden; /* Crucial for background movement */
+    background-color: var(--charity-light-blue-bg);
+    overflow: hidden;
 }
 
 canvas {
     display: block;
-    background-color: transparent; /* Canvas will draw its own background */
+    background-color: transparent;
 }
 
-/* Game Screens (Start, Game Over, Win) */
 .game-screen {
     position: absolute;
     top: 0;
@@ -101,59 +104,57 @@ canvas {
 }
 
 .game-screen h2 {
-    font-size: 2.8em;
-    margin-bottom: 20px;
+    font-size: 2.2em;
+    margin-bottom: 18px;
     color: var(--charity-yellow);
+    font-family: 'Montserrat', 'Arial', sans-serif;
+    font-weight: 900;
+    letter-spacing: 0.05em;
+    text-shadow: 0 2px 12px rgba(255,179,0,0.13), 0 1px 0 #fff;
 }
 
-.game-screen p {
-    font-size: 1.3em;
-    margin-bottom: 30px;
+.game-screen p,
+.awareness-info {
+    font-family: 'Montserrat', 'Arial', sans-serif;
+    font-size: 1.1em;
+    margin-bottom: 22px;
     line-height: 1.5;
-}
-
-.game-screen button {
-    background-color: var(--charity-blue);
-    color: var(--charity-white);
-    border: none;
-    padding: 15px 30px;
-    font-size: 1.3em;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: background-color 0.3s ease, transform 0.1s ease;
-    margin: 10px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-}
-
-.game-screen button:hover {
-    background-color: #2677C5; /* Slightly darker blue */
-    transform: translateY(-2px);
+    color: #f8f8f8;
+    letter-spacing: 0.01em;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.08);
 }
 
 .awareness-info {
     font-size: 1em;
-    margin-top: 25px;
-    color: #bbb;
+    margin-top: 18px;
+    color: #ffe082;
+    font-weight: 500;
+    text-shadow: none;
 }
 
-/* Win Screen specific styles */
 #win-screen h2.celebration-text {
-    font-size: 3.5em;
+    font-size: 2.5em;
     color: var(--charity-yellow);
-    text-shadow: 0 0 15px rgba(255, 255, 0, 0.7);
+    text-shadow: 0 0 15px rgba(255, 255, 0, 0.7), 0 2px 8px rgba(255,179,0,0.13);
     animation: pulse 1.5s infinite alternate;
+    font-family: 'Montserrat', 'Arial', sans-serif;
+    font-weight: 900;
+    letter-spacing: 0.07em;
 }
 
 .celebration-message {
-    font-size: 1.8em !important;
+    font-size: 1.3em !important;
     color: var(--charity-white);
-    margin-bottom: 40px !important;
+    margin-bottom: 30px !important;
+    font-family: 'Montserrat', 'Arial', sans-serif;
+    font-weight: 700;
+    letter-spacing: 0.03em;
 }
 
 .celebration-icon {
-    width: 100px;
-    height: 100px;
-    margin-bottom: 30px;
+    width: 90px;
+    height: 90px;
+    margin-bottom: 24px;
     animation: bounce 0.8s infinite alternate;
 }
 
@@ -164,75 +165,157 @@ canvas {
 
 @keyframes bounce {
     from { transform: translateY(0); }
-    to { transform: translateY(-15px); }
+    to { transform: translateY(-12px); }
 }
 
-
-/* In-Game UI (Score & Facts) */
 #game-ui {
     position: absolute;
     top: 15px;
     left: 0;
     width: 100%;
     display: flex;
-    justify-content: space-between;
-    align-items: center;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: flex-start; /* Align to top for better cloud alignment */
     padding: 0 25px;
     box-sizing: border-box;
-    z-index: 50; /* Above game elements, below screens */
+    z-index: 50;
+    font-family: 'Montserrat', 'Arial', sans-serif;
+    font-size: 1em;
+    letter-spacing: 0.02em;
+    gap: 18px;
+    pointer-events: none; /* Prevent accidental clicks on UI overlay */
 }
 
-/* Jerry Can Score Bar */
 #score-jerrycan {
     position: relative;
-    width: 60px; /* Jerry can width */
-    height: 80px; /* Jerry can height */
-    background: url('images/yellow_jerry_can.png') no-repeat center center; /* Use your PNG */
+    width: 60px;
+    height: 80px;
+    background: url('images/yellow_jerry_can.png') no-repeat center center;
     background-size: contain;
     border: 2px solid var(--charity-dark-gray);
-    border-radius: 8px; /* For rounded jerry can bottom */
+    border-radius: 8px;
     overflow: hidden;
     display: flex;
-    flex-direction: column-reverse; /* Fill from bottom */
+    flex-direction: column-reverse;
     align-items: center;
     justify-content: flex-start;
-    padding-top: 10px; /* Space for spout */
+    padding-top: 10px;
     box-sizing: border-box;
-    left: 20px; /* Position it near the player */
-    bottom: 20px;
-    transform: translateY(20px); /* Adjust based on character position */
-    opacity: 0.9;
+    left: 0;
+    bottom: 0;
+    transform: none;
+    opacity: 0.93;
+    margin-right: 18px;
+    pointer-events: auto; /* Allow interaction if needed */
 }
 
 #jerrycan-fill {
     width: 100%;
-    background-color: var(--charity-blue); /* Color of water filling */
-    transition: height 0.3s ease-out; /* Smooth filling animation */
-    /* Height will be controlled by JS */
+    background-color: var(--charity-blue);
+    transition: height 0.3s ease-out;
 }
 
 #score-text {
     position: absolute;
     bottom: 5px;
-    font-size: 0.6em;
-    font-weight: bold;
-    color: rgba(51, 51, 51, 0.45); /* More transparent dark gray */
-    background-color: transparent;  /* Remove background */
+    font-size: 1.05em;
+    font-weight: 800;
+    color: rgba(51, 51, 51, 0.38);
+    background-color: transparent;
     padding: 2px 5px;
     border-radius: 3px;
-    z-index: 1; /* Above fill */
-    text-shadow: 0 1px 2px rgba(255,255,255,0.5); /* Optional: subtle white shadow for readability */
+    z-index: 1;
+    text-shadow: 0 2px 8px rgba(255,255,255,0.18), 0 1px 0 #fff;
+    font-family: 'Montserrat', 'Arial', sans-serif;
+    letter-spacing: 0.03em;
+    transition: color 0.2s;
+}
+
+#score-text:after {
+    content: " 💧";
+    font-size: 0.9em;
+    opacity: 0.7;
 }
 
 #facts-ticker {
-    background-color: rgba(255, 255, 255, 0.8);
-    padding: 8px 15px;
-    border-radius: 20px;
-    max-width: 40%;
-    text-align: right;
-    font-size: 0.9em;
+    position: relative;
+    display: flex;
+    align-items: center;
+    flex: 1 1 0;
+    min-width: 340px;
+    min-height: 60px;
+    padding: 28px 60px 28px 60px;
+    margin: 0;
+    background: #fff;
     color: var(--charity-dark-gray);
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    font-family: 'Montserrat', 'Arial', sans-serif;
+    font-size: 1.13em;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    text-align: left;
+    box-shadow: 0 8px 32px rgba(46,134,222,0.13), 0 2px 8px rgba(76,175,80,0.10);
+    border-radius: 60% 80% 70% 80% / 80% 70% 80% 60%;
+    overflow: visible;
+    z-index: 1;
+}
+
+#facts-ticker .cloud-circle {
+    position: absolute;
+    background: #fff;
+    opacity: 0.95;
+    z-index: 0;
+    pointer-events: none;
+    box-shadow: 0 4px 18px 0 rgba(46,134,222,0.08);
+}
+
+#facts-ticker .cloud1 {
+    width: 70px;
+    height: 70px;
+    left: -40px;
+    top: 18px;
+    border-radius: 50%;
+}
+
+#facts-ticker .cloud2 {
+    width: 50px;
+    height: 50px;
+    left: 30px;
+    top: -30px;
+    border-radius: 50%;
+}
+
+#facts-ticker .cloud3 {
+    width: 60px;
+    height: 60px;
+    right: 10px;
+    top: -35px;
+    border-radius: 50%;
+}
+
+#facts-ticker .cloud4 {
+    width: 40px;
+    height: 40px;
+    right: -30px;
+    top: 30px;
+    border-radius: 50%;
+    opacity: 0.85;
+}
+
+#facts-ticker .cloud5 {
+    width: 35px;
+    height: 35px;
+    left: 60%;
+    bottom: -20px;
+    border-radius: 50%;
+    opacity: 0.8;
+}
+
+/* Ensure the text is above the cloud circles */
+#facts-ticker span.fact-text {
+    position: relative;
+    z-index: 2;
+    width: 100%;
 }
 
 /* Basic Character & Item Placeholders (will be drawn on canvas) */
