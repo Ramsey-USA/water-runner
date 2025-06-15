@@ -2,6 +2,10 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
+// Preload ground texture image
+const groundTexture = new Image();
+groundTexture.src = 'images/ground_texture.png';
+
 // UI Elements
 const startScreen = document.getElementById('start-screen');
 const gameOverScreen = document.getElementById('game-over-screen');
@@ -64,8 +68,7 @@ const COLORS = {
     WHITE: '#FFFFFF',
     DARK_GRAY: '#333333',
     LIGHT_BLUE_BG: '#E0F2F7',
-    GROUND: '#8B4513' // Sienna for ground
-};
+    GROUND: '#8B4513'};
 
 // --- Terrain / Rows Logic ---
 // We'll manage ground segments. Each segment has a startX, endX, and height.
@@ -243,10 +246,23 @@ function gameLoop(currentTime) {
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     // Draw Ground
-    ctx.fillStyle = COLORS.GROUND;
-    groundSegments.forEach(segment => {
-        ctx.fillRect(segment.startX, canvas.height - segment.height, segment.endX - segment.startX, segment.height);
-    });
+    function drawGround() {
+        groundSegments.forEach(segment => {
+            if (groundTexture.complete && groundTexture.naturalWidth !== 0) {
+                ctx.drawImage(
+                    groundTexture,
+                    segment.startX,
+                    canvas.height - segment.height,
+                    segment.endX - segment.startX,
+                    segment.height
+                );
+            } else {
+                ctx.fillStyle = COLORS.GROUND;
+                ctx.fillRect(segment.startX, canvas.height - segment.height, segment.endX - segment.startX, segment.height);
+            }
+        });
+    }
+    drawGround();
     updateGroundSegments();
 
     // Update and draw character
