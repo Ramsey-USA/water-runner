@@ -14,8 +14,8 @@
     --header-padding: 1.5vw 2vw;
     --header-gap: 2vw;
 
-    --jerrycan-width: 72px;
-    --jerrycan-height: 96px;
+    --jerrycan-width: 200px;
+    --jerrycan-height: 210px;
     --jerrycan-radius: 16px;
     --jerrycan-shadow: 0 2px 8px rgba(46,134,222,0.10);
 
@@ -168,10 +168,6 @@ canvas {
     position: relative;
     width: var(--jerrycan-width);
     height: var(--jerrycan-height);
-    min-width: 32px;
-    min-height: 40px;
-    max-width: 64px;
-    max-height: 80px;
     margin-right: 2vw;
     box-sizing: border-box;
     border-radius: var(--jerrycan-radius);
@@ -212,14 +208,15 @@ canvas {
 
 #score-text {
     position: absolute;
-    left: 50%;
+    left: 0;
     bottom: 8px;
-    transform: translateX(-50%);
-    font-size: 1.3em;
+    width: 100%;              /* Makes the text as wide as the jerry can container */
+    text-align: center;       /* Centers the text horizontally */
+    font-size: 2em;
     font-weight: 900;
     color: var(--score-color);
-    background: var(--score-bg);
-    padding: 6px 18px 4px 18px;
+    background: transparent;
+    padding: 0px 0 4px 0;     /* Optional: adjust vertical padding, no horizontal */
     border-radius: var(--score-radius);
     z-index: 2;
     text-shadow: 0 2px 8px rgba(255,255,255,0.22), 0 1px 0 #fff, 0 0 2px #fff;
@@ -228,7 +225,6 @@ canvas {
     transition: color 0.2s, background 0.2s;
     box-shadow: var(--score-shadow);
     opacity: 1;
-    border: var(--score-border);
     pointer-events: none;
 }
 
