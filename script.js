@@ -73,7 +73,7 @@ const FACT_DISPLAY_TIME = 8000;
 
 // --- Colors ---
 const COLORS = {
-    BLUE: '#2E86DE',
+    BLUE: "#4FC3F7", // Use a light blue for water
     YELLOW: '#FFB300',
     WHITE: '#FFFFFF',
     DARK_GRAY: '#333333',
@@ -286,6 +286,63 @@ function saveBestTime(time) {
     }
 }
 
+// --- Water Splash Effect ---
+let splashDroplets = [];
+let splashActive = false;
+const SPLASH_DROPLET_COUNT = 32;
+
+function startSplashEffect() {
+    splashDroplets = [];
+    splashActive = true;
+    for (let i = 0; i < SPLASH_DROPLET_COUNT; i++) {
+        const angle = Math.random() * Math.PI;
+        const speed = 6 + Math.random() * 6;
+        splashDroplets.push({
+            x: canvas.width / 2,
+            y: canvas.height - 60,
+            vx: Math.cos(angle) * speed,
+            vy: -Math.abs(Math.sin(angle) * speed) - 2,
+            radius: 6 + Math.random() * 6,
+            alpha: 1
+        });
+    }
+}
+
+function updateSplashEffect(dt = 1) {
+    if (!splashActive) return;
+    splashDroplets.forEach(d => {
+        d.x += d.vx * dt;
+        d.y += d.vy * dt;
+        d.vy += 0.35 * dt;
+        d.alpha -= 0.012 * dt;
+    });
+    splashDroplets = splashDroplets.filter(d => d.alpha > 0);
+    if (splashDroplets.length === 0) splashActive = false;
+}
+
+function drawSplashEffect() {
+    if (!splashActive) return;
+    splashDroplets.forEach(d => {
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, d.alpha);
+        ctx.beginPath();
+        ctx.arc(d.x, d.y, d.radius, 0, Math.PI * 2);
+        ctx.fillStyle = COLORS.BLUE;
+        ctx.shadowColor = COLORS.BLUE;
+        ctx.shadowBlur = 8;
+        ctx.fill();
+
+        // Optional: highlight
+        ctx.beginPath();
+        ctx.arc(d.x + d.radius/3, d.y - d.radius/3, d.radius/3, 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(255,255,255,0.5)";
+        ctx.shadowBlur = 0;
+        ctx.fill();
+
+        ctx.restore();
+    });
+}
+
 // --- Game Loop ---
 function gameLoop(currentTime) {
     if (!gameRunning || gamePaused) return;
@@ -408,6 +465,7 @@ function gameLoop(currentTime) {
     // Win Condition
     if (score >= WINNING_SCORE) {
         winGame();
+        startSplashEffect();
         return;
     }
 
@@ -415,9 +473,13 @@ function gameLoop(currentTime) {
     factTimer += deltaTime;
     if (factTimer >= FACT_DISPLAY_TIME) {
         currentFactIndex = (currentFactIndex + 1) % awarenessFacts.length;
-        factsTicker.textContent = awarenessFacts[currentFactIndex];
+        if (factsTicker) factsTicker.textContent = awarenessFacts[currentFactIndex];
         factTimer = 0;
     }
+
+    // Draw splash effect if active
+    drawSplashEffect();
+    updateSplashEffect(dt);
 
     animationFrameId = requestAnimationFrame(gameLoop);
 }
@@ -468,6 +530,8 @@ function winGame() {
     winScreen.classList.add('active');
     stopTimer();
     saveBestTime(elapsedTime);
+    startSplashEffect();
+    finalScoreText.textContent = `You collected ${score} liters of water in ${elapsedTime.toFixed(2)} seconds!`;    
 }
 
 function togglePauseResume() {
@@ -551,5 +615,3 @@ window.onload = () => {
     loadBestTime();
     resetTimer();
 };
-
-/* Removed redundant DOMContentLoaded event listener */
