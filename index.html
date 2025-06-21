@@ -8,20 +8,26 @@
     <link href="https://fonts.googleapis.com/css?family=Montserrat:400,500,700,900&display=swap" rel="stylesheet">
 </head>
 <body>
-    <!-- Reset Button above the header -->
-    <button id="resetButton" class="header-button reset-top-btn">Reset</button>
+    <!-- Water drop between buttons at the top -->
+    <div class="top-controls">
+        <button id="resetButton" class="header-button reset-top-btn">Reset</button>
+        <img id="header-water-drop" src="images/water_drop.png" alt="Water Drop" class="header-water-drop" draggable="false">
+        <button id="pauseResumeButton" class="header-button pause-top-btn">Pause</button>
+    </div>
     <div id="game-wrapper">
         <header id="game-header">
-            <div id="score-jerrycan">
-                <div id="jerrycan-fill"></div>
-                <img id="jerrycan-img" src="images/yellow_jerry_can.png" alt="Jerry Can" draggable="false">
-                <span id="score-text">0 L</span>
+            <!-- User sprite on the left -->
+            <div class="header-user">
+                <img id="header-user-sprite" src="images/user_sprite.png" alt="User" class="header-user-sprite" draggable="false">
             </div>
             <h1 class="game-title">
                 <a href="https://www.charitywater.org/" target="_blank" rel="noopener" class="charity-link">The Water Journey</a>
             </h1>
-            <div class="header-controls">
-                <button id="pauseResumeButton" class="header-button">Pause</button>
+            <!-- Jerry-can on the right -->
+            <div id="score-jerrycan">
+                <div id="jerrycan-fill"></div>
+                <img id="jerrycan-img" src="images/yellow_jerry_can.png" alt="Jerry Can" draggable="false">
+                <span id="score-text">0 L</span>
             </div>
         </header>
 

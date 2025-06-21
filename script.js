@@ -6,9 +6,9 @@ const ctx = canvas.getContext('2d');
 const images = {
     groundTexture: 'images/ground_texture.png',
     thornyBush: 'images/thorny_bush.png',
-    obstacleRock: 'images/obstacle_rock.png',      // Changed from obstacle_pipe.png
+    obstacleRock: 'images/obstacle_rock.png',
     obstacleSeagull: 'images/obstacle_seagull.png',
-    obstacleSnake: 'images/obstacle_snake.png',    // Added snake obstacle
+    obstacleSnake: 'images/obstacle_snake.png',
     waterDrop: 'images/water_drop.png',
     yellowJerryCan: 'images/yellow_jerry_can.png',
     userSprite: 'images/user_sprite.png'
@@ -51,7 +51,7 @@ let lastFrameTime = 0;
 // --- Game Constants ---
 const GRAVITY = 0.5;
 const JUMP_STRENGTH = -12;
-let GAME_SPEED = 7; // Start at 7
+let GAME_SPEED = 7;
 const WINNING_SCORE = 100;
 const OBSTACLE_SPAWN_INTERVAL_MIN = 800;
 const OBSTACLE_SPAWN_INTERVAL_MAX = 1800;
@@ -75,7 +75,7 @@ const FACT_DISPLAY_TIME = 8000;
 
 // --- Colors ---
 const COLORS = {
-    BLUE: "#4FC3F7", // Use a light blue for water
+    BLUE: "#4FC3F7",
     YELLOW: '#FFB300',
     WHITE: '#FFFFFF',
     DARK_GRAY: '#333333',
@@ -219,7 +219,7 @@ function WaterItem(x, y, width, height, type = 'drop') {
     this.height = height;
     this.collected = false;
     this.type = type; // 'drop' or 'barrel'
-    this.value = (type === 'barrel') ? 5 : 1; // Jerry can: +5, Droplet: +1
+    this.value = (type === 'barrel') ? 5 : 1;
 
     this.draw = function() {
         if (this.type === 'barrel' && loadedImages.yellowJerryCan.complete && loadedImages.yellowJerryCan.naturalWidth !== 0) {
@@ -246,13 +246,12 @@ function checkCollision(obj1, obj2) {
            obj1.y + obj1.height > obj2.y;
 }
 
-// --- Timer Variables ---
+// --- Timer ---
 let startTime = 0;
 let elapsedTime = 0;
 let timerRunning = false;
 let bestTime = null;
 
-// --- Timer Functions ---
 function startTimer() {
     startTime = performance.now();
     elapsedTime = 0;
@@ -275,7 +274,6 @@ function updateTimer(currentTime) {
     }
 }
 
-// --- Best Time Functions ---
 function loadBestTime() {
     const stored = localStorage.getItem('waterRunnerBestTime');
     bestTime = stored ? parseFloat(stored) : null;
@@ -354,9 +352,8 @@ function gameLoop(currentTime) {
     // Calculate delta time (dt)
     const deltaTime = currentTime - lastFrameTime || 16.67;
     lastFrameTime = currentTime;
-    const dt = deltaTime / 16.67; // 1 at 60fps
+    const dt = deltaTime / 16.67;
 
-    // --- Timer update ---
     updateTimer(currentTime);
 
     // Draw background
@@ -446,7 +443,7 @@ function gameLoop(currentTime) {
         obstacle.update(dt);
         obstacle.draw();
         if (!obstacle.isHit && checkCollision(character, obstacle)) {
-            score = Math.max(0, score - 3); // Obstacles: -3
+            score = Math.max(0, score - 3);
             updateJerryCan();
             obstacle.isHit = true;
         }
@@ -461,7 +458,7 @@ function gameLoop(currentTime) {
         item.update(dt);
         item.draw();
         if (checkCollision(character, item)) {
-            score = Math.max(0, score + item.value); // Use item.value (+1 or +5)
+            score = Math.max(0, score + item.value);
             updateJerryCan();
             waterItems.splice(i, 1);
         } else if (item.x + item.width < 0) {
@@ -494,7 +491,7 @@ function gameLoop(currentTime) {
 // --- Game Control Functions ---
 function initGame() {
     score = 0;
-    GAME_SPEED = 7; // <-- Reset speed to initial value
+    GAME_SPEED = 7;
     character = new Character();
     obstacles = [];
     waterItems = [];
@@ -510,7 +507,6 @@ function initGame() {
 }
 
 function startGame() {
-    // Cancel any running animation frame to prevent multiple loops
     if (animationFrameId) {
         cancelAnimationFrame(animationFrameId);
     }
@@ -612,7 +608,6 @@ document.addEventListener('keydown', (e) => {
         if (gameRunning && !gamePaused) {
             character.jump();
         }
-        // Prevent default to avoid scrolling
         e.preventDefault();
     } else if (e.code === 'KeyP') {
         togglePauseResume();

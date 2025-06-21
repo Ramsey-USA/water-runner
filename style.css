@@ -55,22 +55,25 @@ h1, h2, h3, h4, h5, h6 {
 
 /* === HEADER === */
 #game-header {
-    background: var(--color-green, #43a047);
-    color: var(--color-white);
-    padding: var(--header-padding);
     display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: var(--header-gap);
     width: 100%;
     max-width: var(--header-max-width);
     margin: 0 auto;
+    background: var(--color-green, #43a047);
+    color: var(--color-white);
+    padding: var(--header-padding);
+    border-radius: 24px;
     box-sizing: border-box;
     font-size: 1.1em;
     transition: padding 0.2s, font-size 0.2s;
 }
 
 .game-title {
-    flex: 1 1 auto;
+    flex: 1 1 0;
+    text-align: center;
     font-size: 2.8vw;
     font-weight: 900;
     letter-spacing: 0.07em;
@@ -106,13 +109,17 @@ h1, h2, h3, h4, h5, h6 {
 .header-button,
 #startButton,
 #win-screen button,
-#game-over-screen button {
+#game-over-screen button,
+.reset-top-btn,
+.pause-top-btn {
+    min-width: 120px;
+    min-height: 52px;
     background: linear-gradient(90deg, var(--color-yellow) 60%, #ffe082 100%);
     color: var(--color-dark-gray);
     border: none;
-    padding: 14px 32px;
+    padding: 16px 32px;
     font-size: 1.15em;
-    border-radius: var(--button-radius);
+    border-radius: var(--button-radius, 16px);
     cursor: pointer;
     font-family: var(--font-main);
     font-weight: 800;
@@ -145,15 +152,17 @@ h1, h2, h3, h4, h5, h6 {
 /* === GAME CONTAINER & CANVAS === */
 #game-container {
     position: relative;
-    width: 90vw;
+    width: 96vw;
     max-width: 900px;
-    height: 50vw;
+    height: 56vw;
     max-height: 450px;
-    min-width: 320px;
-    min-height: 200px;
+    min-width: 280px;
+    min-height: 180px;
     background: var(--color-light-blue-bg);
     overflow: hidden;
     box-sizing: border-box;
+    border-radius: 16px;
+    margin: 0 auto;
 }
 
 canvas {
@@ -161,6 +170,7 @@ canvas {
     width: 100% !important;
     height: 100% !important;
     background: transparent;
+    border-radius: 16px;
 }
 
 /* === SCORING JERRY CAN === */
@@ -497,38 +507,76 @@ canvas {
     }
 }
 
-.reset-top-btn {
-    display: block !important;
-    width: auto !important;
-    margin-left: auto !important;
-    margin-right: auto !important;
-    margin-top: 32px !important;
-    margin-bottom: 12px !important;
-    position: static !important;
-    float: none !important;
-    text-align: center !important;
-    z-index: 1100;
-}
-
-/* Center everything vertically and horizontally */
-body {
-    min-height: 100vh;
+/* Top controls: center, with water drop between buttons */
+.top-controls {
     display: flex;
-    flex-direction: column;
+    justify-content: center;
     align-items: center;
-    justify-content: flex-start; /* So the reset button stays at the top */
-    background: var(--color-blue);
-    font-family: var(--font-main);
-    margin: 0;
-    color: var(--color-dark-gray);
-    letter-spacing: 0.01em;
-    overflow: hidden;
+    gap: 28px;
+    margin-top: 32px;
+    margin-bottom: 12px;
 }
 
-/* Center the game-wrapper horizontally */
-#game-wrapper {
+.header-water-drop {
+    width: 64px;
+    height: 64px;
+    margin: 0 8px;
+    vertical-align: middle;
+    filter: drop-shadow(0 2px 8px rgba(46,134,222,0.13));
+    user-select: none;
+}
+
+@media (max-width: 600px) {
+    .header-water-drop {
+        width: 40px;
+        height: 40px;
+        margin: 0 4px;
+    }
+}
+
+/* Header layout: user left, title center, jerrycan right */
+#game-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--header-gap);
     width: 100%;
+    max-width: var(--header-max-width);
+    margin: 0 auto;
+    background: var(--color-green, #43a047);
+    color: var(--color-white);
+    padding: var(--header-padding);
+    border-radius: 24px;
+    box-sizing: border-box;
+    font-size: 1.1em;
+    transition: padding 0.2s, font-size 0.2s;
+}
+
+.header-user {
     display: flex;
-    flex-direction: column;
     align-items: center;
+    justify-content: flex-start;
+    min-width: 60px;
+    margin-right: 1vw;
+}
+
+.header-user-sprite {
+    width: clamp(48px, 10.8vw, 132px);
+    height: clamp(64.8px, 14.4vw, 146.4px);
+    object-fit: contain;
+    user-select: none;
+    transition: width 0.2s, height 0.2s;
+}
+
+@media (max-width: 600px) {
+    .header-user-sprite {
+        width: clamp(33.6px, 16.8vw, 57.6px);
+        height: clamp(43.2px, 21.6vw, 76.8px);
+    }
+}
+
+/* Jerrycan on right, override margin */
+#score-jerrycan {
+    margin-left: 2vw;
+    margin-right: 0;
 }
