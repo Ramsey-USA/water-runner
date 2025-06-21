@@ -6,8 +6,9 @@ const ctx = canvas.getContext('2d');
 const images = {
     groundTexture: 'images/ground_texture.png',
     thornyBush: 'images/thorny_bush.png',
-    obstaclePipe: 'images/obstacle_pipe.png',
+    obstacleRock: 'images/obstacle_rock.png',      // Changed from obstacle_pipe.png
     obstacleSeagull: 'images/obstacle_seagull.png',
+    obstacleSnake: 'images/obstacle_snake.png',    // Added snake obstacle
     waterDrop: 'images/water_drop.png',
     yellowJerryCan: 'images/yellow_jerry_can.png',
     userSprite: 'images/user_sprite.png'
@@ -35,6 +36,7 @@ const jerrycanFill = document.getElementById('jerrycan-fill');
 const factsTicker = document.querySelector('#facts-ticker .fact-text');
 const timerValue = document.getElementById('timer-value');
 const bestTimeValue = document.getElementById('best-time-value');
+const resetButton = document.getElementById('resetButton');
 
 // --- Game State Variables ---
 let gameRunning = false;
@@ -188,15 +190,17 @@ function Obstacle(x, y, width, height, type) {
     this.width = width;
     this.height = height;
     this.isHit = false;
-    this.type = type; // 'bush', 'pipe', 'seagull'
+    this.type = type; // 'bush', 'rock', 'seagull', 'snake'
 
     this.draw = function() {
         if (this.type === 'bush' && loadedImages.thornyBush.complete && loadedImages.thornyBush.naturalWidth !== 0) {
             ctx.drawImage(loadedImages.thornyBush, this.x, this.y, this.width, this.height);
-        } else if (this.type === 'pipe' && loadedImages.obstaclePipe.complete && loadedImages.obstaclePipe.naturalWidth !== 0) {
-            ctx.drawImage(loadedImages.obstaclePipe, this.x, this.y, this.width, this.height);
+        } else if (this.type === 'rock' && loadedImages.obstacleRock.complete && loadedImages.obstacleRock.naturalWidth !== 0) {
+            ctx.drawImage(loadedImages.obstacleRock, this.x, this.y, this.width, this.height);
         } else if (this.type === 'seagull' && loadedImages.obstacleSeagull.complete && loadedImages.obstacleSeagull.naturalWidth !== 0) {
             ctx.drawImage(loadedImages.obstacleSeagull, this.x, this.y, this.width, this.height);
+        } else if (this.type === 'snake' && loadedImages.obstacleSnake.complete && loadedImages.obstacleSnake.naturalWidth !== 0) {
+            ctx.drawImage(loadedImages.obstacleSnake, this.x, this.y, this.width, this.height);
         } else {
             ctx.fillStyle = COLORS.DARK_GRAY;
             ctx.fillRect(this.x, this.y, this.width, this.height);
@@ -391,11 +395,14 @@ function gameLoop(currentTime) {
         if (groundAtSpawnX !== -Infinity) {
             let type, y;
             const rand = Math.random();
-            if (rand < 0.4) {
+            if (rand < 0.3) {
                 type = 'bush';
                 y = canvas.height - groundAtSpawnX - obstacleHeight;
+            } else if (rand < 0.6) {
+                type = 'rock';
+                y = canvas.height - groundAtSpawnX - obstacleHeight;
             } else if (rand < 0.8) {
-                type = 'pipe';
+                type = 'snake';
                 y = canvas.height - groundAtSpawnX - obstacleHeight;
             } else {
                 type = 'seagull';
@@ -487,6 +494,7 @@ function gameLoop(currentTime) {
 // --- Game Control Functions ---
 function initGame() {
     score = 0;
+    GAME_SPEED = 7; // <-- Reset speed to initial value
     character = new Character();
     obstacles = [];
     waterItems = [];
@@ -502,6 +510,10 @@ function initGame() {
 }
 
 function startGame() {
+    // Cancel any running animation frame to prevent multiple loops
+    if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+    }
     initGame();
     startScreen.classList.remove('active');
     gameOverScreen.classList.remove('active');
@@ -511,7 +523,7 @@ function startGame() {
     pauseResumeButton.textContent = "Pause";
     lastFrameTime = performance.now();
     resetTimer();
-    startTimer(); // <-- Start timer when game starts
+    startTimer();
     animationFrameId = requestAnimationFrame(gameLoop);
 }
 
@@ -607,6 +619,12 @@ document.addEventListener('keydown', (e) => {
         e.preventDefault();
     }
 });
+
+if (resetButton) {
+    resetButton.addEventListener('click', () => {
+        startGame();
+    });
+}
 
 // --- Initialization ---
 window.onload = () => {

@@ -33,10 +33,11 @@
 
 /* === BASE === */
 body {
-    display: flex;
-    justify-content: center;
-    align-items: center;
     min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start; /* So the reset button stays at the top */
     background: var(--color-blue);
     font-family: var(--font-main);
     margin: 0;
@@ -494,4 +495,40 @@ canvas {
         min-width: 120px;
         bottom: 8px;
     }
+}
+
+.reset-top-btn {
+    display: block !important;
+    width: auto !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    margin-top: 32px !important;
+    margin-bottom: 12px !important;
+    position: static !important;
+    float: none !important;
+    text-align: center !important;
+    z-index: 1100;
+}
+
+/* Center everything vertically and horizontally */
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start; /* So the reset button stays at the top */
+    background: var(--color-blue);
+    font-family: var(--font-main);
+    margin: 0;
+    color: var(--color-dark-gray);
+    letter-spacing: 0.01em;
+    overflow: hidden;
+}
+
+/* Center the game-wrapper horizontally */
+#game-wrapper {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
