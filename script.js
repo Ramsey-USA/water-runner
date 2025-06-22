@@ -38,10 +38,18 @@ const timerValue = document.getElementById('timer-value');
 const bestTimeValue = document.getElementById('best-time-value');
 const resetButton = document.getElementById('resetButton');
 const levelSelect = document.getElementById('level');
+const scoreCardButton = document.getElementById('scoreCardButton');
+const scoreCardModal = document.getElementById('score-card-modal');
+const closeScoreCardModal = document.getElementById('closeScoreCardModal');
+const scoreCardList = document.getElementById('scoreCardList');
+const helpButton = document.getElementById('helpButton');
+const helpModal = document.getElementById('help-modal');
+const closeHelpModal = document.getElementById('closeHelpModal');
 
 // --- Game State Variables ---
 let gameRunning = false;
 let gamePaused = false;
+let isPaused = false;
 let score = 0;
 let character;
 let obstacles = [];
@@ -49,9 +57,10 @@ let waterItems = [];
 let animationFrameId;
 let lastFrameTime = 0;
 let currentLevel = 'easy';
-
-// --- Falling Droplets (from jerrycan) ---
 let fallingDroplets = [];
+let groundSegments = [];
+let splashDroplets = [];
+let splashActive = false;
 
 // --- Game Constants ---
 const GRAVITY = 0.5;
@@ -88,8 +97,32 @@ const COLORS = {
     GROUND: '#8B4513'
 };
 
+// --- Level Settings ---
+const LEVELS = {
+    easy: {
+        speed: 7,
+        obstacleMin: 800,
+        obstacleMax: 1800,
+        obstacleWidth: 28,
+        obstacleHeight: 38
+    },
+    normal: {
+        speed: 10,
+        obstacleMin: 600,
+        obstacleMax: 1200,
+        obstacleWidth: 38,
+        obstacleHeight: 48
+    },
+    hard: {
+        speed: 13,
+        obstacleMin: 400,
+        obstacleMax: 900,
+        obstacleWidth: 48,
+        obstacleHeight: 58
+    }
+};
+
 // --- Terrain / Rows Logic ---
-let groundSegments = [];
 const MIN_GROUND_HEIGHT = 50;
 const MAX_GROUND_HEIGHT = 150;
 const GROUND_SEGMENT_WIDTH_MIN = 200;
@@ -195,7 +228,7 @@ function Obstacle(x, y, width, height, type) {
     this.width = width;
     this.height = height;
     this.isHit = false;
-    this.type = type; // 'bush', 'rock', 'seagull', 'snake'
+    this.type = type;
 
     this.draw = function() {
         if (this.type === 'bush' && loadedImages.thornyBush.complete && loadedImages.thornyBush.naturalWidth !== 0) {
@@ -223,7 +256,7 @@ function WaterItem(x, y, width, height, type = 'drop') {
     this.width = width;
     this.height = height;
     this.collected = false;
-    this.type = type; // 'drop' or 'barrel'
+    this.type = type;
     this.value = (type === 'barrel') ? 5 : 1;
 
     this.draw = function() {
@@ -294,8 +327,6 @@ function saveBestTime(time) {
 }
 
 // --- Water Splash Effect ---
-let splashDroplets = [];
-let splashActive = false;
 const SPLASH_DROPLET_COUNT = 32;
 
 function startSplashEffect() {
@@ -339,7 +370,6 @@ function drawSplashEffect() {
         ctx.shadowBlur = 8;
         ctx.fill();
 
-        // Optional: highlight
         ctx.beginPath();
         ctx.arc(d.x + d.radius/3, d.y - d.radius/3, d.radius/3, 0, Math.PI * 2);
         ctx.fillStyle = "rgba(255,255,255,0.5)";
@@ -459,7 +489,6 @@ function gameLoop(currentTime) {
             if (jerryCanElem) {
                 const rect = jerryCanElem.getBoundingClientRect();
                 const canvasRect = canvas.getBoundingClientRect();
-                // Calculate position relative to canvas
                 const dropX = rect.left + rect.width / 2 - canvasRect.left - 14;
                 const dropY = rect.top + rect.height / 2 - canvasRect.top;
                 fallingDroplets.push({
@@ -467,7 +496,7 @@ function gameLoop(currentTime) {
                     y: dropY,
                     width: 28,
                     height: 36,
-                    vy: 6 // falling speed
+                    vy: 6
                 });
             }
         }
@@ -480,7 +509,6 @@ function gameLoop(currentTime) {
     for (let i = fallingDroplets.length - 1; i >= 0; i--) {
         const d = fallingDroplets[i];
         d.y += d.vy * dt;
-        // Draw the droplet
         if (
             loadedImages.waterDrop &&
             loadedImages.waterDrop.complete &&
@@ -493,7 +521,6 @@ function gameLoop(currentTime) {
             ctx.arc(d.x + d.width / 2, d.y + d.height / 2, d.width / 2, 0, Math.PI * 2);
             ctx.fill();
         }
-        // Remove if out of screen
         if (d.y > canvas.height) {
             fallingDroplets.splice(i, 1);
         }
@@ -565,7 +592,8 @@ function startGame() {
     winScreen.classList.remove('active');
     gameRunning = true;
     gamePaused = false;
-    pauseResumeButton.textContent = "Pause";
+    isPaused = false;
+    pauseResumeButton.innerHTML = '<i class="fa-solid fa-pause"></i> Pause';
     lastFrameTime = performance.now();
     resetTimer();
     startTimer();
@@ -587,20 +615,17 @@ function winGame() {
     winScreen.classList.add('active');
     stopTimer();
     saveBestTime(elapsedTime);
+    saveTopTime(elapsedTime);
     startSplashEffect();
     finalScoreText.textContent = `You collected ${score} liters of water in ${elapsedTime.toFixed(2)} seconds!`;    
 }
 
-function togglePauseResume() {
-    if (!gameRunning) return;
-    gamePaused = !gamePaused;
-    if (gamePaused) {
-        pauseResumeButton.textContent = "Resume";
-    } else {
-        pauseResumeButton.textContent = "Pause";
-        lastFrameTime = performance.now();
-        animationFrameId = requestAnimationFrame(gameLoop);
-    }
+// --- UI Updates ---
+function updateJerryCan() {
+    const fillPercentage = Math.min(1, score / WINNING_SCORE);
+    jerrycanFill.style.height = `${fillPercentage * 100}%`;
+    scoreText.textContent = `${score} L`;
+    updateGameSpeed();
 }
 
 function getGameSpeedForScore(score) {
@@ -614,14 +639,6 @@ function getGameSpeedForScore(score) {
 
 function updateGameSpeed() {
     GAME_SPEED = getGameSpeedForScore(score);
-}
-
-// --- UI Updates ---
-function updateJerryCan() {
-    const fillPercentage = Math.min(1, score / WINNING_SCORE);
-    jerrycanFill.style.height = `${fillPercentage * 100}%`;
-    scoreText.textContent = `${score} L`;
-    updateGameSpeed();
 }
 
 // --- Responsive Canvas ---
@@ -639,7 +656,35 @@ window.addEventListener('resize', () => {
     generateNewGroundSegment();
 });
 
-// --- Event Listeners ---
+// --- Pause/Resume Logic ---
+pauseResumeButton.addEventListener('click', () => {
+    if (!gameRunning) return;
+    isPaused = !isPaused;
+    gamePaused = isPaused;
+    if (isPaused) {
+        pauseResumeButton.innerHTML = '<i class="fa-solid fa-play"></i> Resume';
+        // Do not call requestAnimationFrame here!
+    } else {
+        pauseResumeButton.innerHTML = '<i class="fa-solid fa-pause"></i> Pause';
+        lastFrameTime = performance.now();
+        animationFrameId = requestAnimationFrame(gameLoop);
+    }
+});
+
+// --- Keyboard Controls ---
+document.addEventListener('keydown', (e) => {
+    if (e.code === 'Space') {
+        if (gameRunning && !gamePaused) {
+            character.jump();
+        }
+        e.preventDefault();
+    } else if (e.code === 'KeyP') {
+        pauseResumeButton.click();
+        e.preventDefault();
+    }
+});
+
+// --- Other UI Event Listeners ---
 startButton.addEventListener('click', startGame);
 restartButton.addEventListener('click', startGame);
 winRestartButton.addEventListener('click', startGame);
@@ -651,23 +696,8 @@ winLearnMoreButton.addEventListener('click', () => {
     window.open('https://www.charitywater.org/', '_blank');
 });
 
-pauseResumeButton.addEventListener('click', togglePauseResume);
-
-document.addEventListener('keydown', (e) => {
-    if (e.code === 'Space') {
-        if (gameRunning && !gamePaused) {
-            character.jump();
-        }
-        e.preventDefault();
-    } else if (e.code === 'KeyP') {
-        togglePauseResume();
-        e.preventDefault();
-    }
-});
-
 if (resetButton) {
     resetButton.addEventListener('click', () => {
-        // Show the start screen (game menu) and allow level selection
         gameRunning = false;
         gamePaused = false;
         cancelAnimationFrame(animationFrameId);
@@ -680,10 +710,6 @@ if (resetButton) {
 }
 
 // --- Help Modal Logic ---
-const helpButton = document.getElementById('helpButton');
-const helpModal = document.getElementById('help-modal');
-const closeHelpModal = document.getElementById('closeHelpModal');
-
 if (helpButton && helpModal && closeHelpModal) {
     helpButton.addEventListener('click', () => {
         helpModal.classList.add('active');
@@ -701,34 +727,57 @@ if (helpButton && helpModal && closeHelpModal) {
     });
 }
 
+// --- Score Card Modal Logic ---
+function saveTopTime(time) {
+    let topTimes = JSON.parse(localStorage.getItem('waterRunnerTopTimes') || '[]');
+    topTimes.push(time);
+    topTimes = topTimes.filter(t => !isNaN(t));
+    topTimes.sort((a, b) => a - b);
+    topTimes = topTimes.slice(0, 5);
+    localStorage.setItem('waterRunnerTopTimes', JSON.stringify(topTimes));
+}
+
+function loadTopTimes() {
+    let topTimes = JSON.parse(localStorage.getItem('waterRunnerTopTimes') || '[]');
+    return topTimes.filter(t => !isNaN(t));
+}
+
+function updateScoreCardList() {
+    const topTimes = loadTopTimes();
+    scoreCardList.innerHTML = '';
+    if (topTimes.length === 0) {
+        scoreCardList.innerHTML = '<li>No times yet. Finish a run to record your time!</li>';
+    } else {
+        topTimes.forEach((t, i) => {
+            const li = document.createElement('li');
+            li.textContent = `#${i + 1}: ${t.toFixed(2)}s`;
+            scoreCardList.appendChild(li);
+        });
+    }
+}
+
+if (scoreCardButton && scoreCardModal && closeScoreCardModal) {
+    scoreCardButton.addEventListener('click', () => {
+        updateScoreCardList();
+        scoreCardModal.classList.add('active');
+    });
+    closeScoreCardModal.addEventListener('click', () => {
+        scoreCardModal.classList.remove('active');
+    });
+    scoreCardModal.addEventListener('click', (e) => {
+        if (e.target === scoreCardModal) scoreCardModal.classList.remove('active');
+    });
+    document.addEventListener('keydown', (e) => {
+        if (scoreCardModal.classList.contains('active') && (e.key === 'Escape' || e.key === 'Esc')) {
+            scoreCardModal.classList.remove('active');
+        }
+    });
+}
+
 // --- Initialization ---
 window.onload = () => {
     startScreen.classList.add('active');
     updateJerryCan();
     loadBestTime();
     resetTimer();
-};
-
-const LEVELS = {
-    easy: {
-        speed: 7,
-        obstacleMin: 800,
-        obstacleMax: 1800,
-        obstacleWidth: 28,
-        obstacleHeight: 38
-    },
-    normal: {
-        speed: 10,
-        obstacleMin: 600,
-        obstacleMax: 1200,
-        obstacleWidth: 38,
-        obstacleHeight: 48
-    },
-    hard: {
-        speed: 13,
-        obstacleMin: 400,
-        obstacleMax: 900,
-        obstacleWidth: 48,
-        obstacleHeight: 58
-    }
 };

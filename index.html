@@ -20,9 +20,6 @@
         <button id="pauseResumeButton" class="header-button pause-top-btn" title="Pause/Resume">
             <i class="fa-solid fa-pause"></i> Pause
         </button>
-        <button id="scoreCardButton" class="header-button score-card-btn" title="View Top Times">
-            <i class="fa-solid fa-trophy"></i> Score Card
-        </button>
     </div>
     <div id="game-wrapper">
         <header id="game-header">
@@ -93,6 +90,9 @@
     </div>
                 <div id="timer-bar">
                     <span id="timer-label">Time: <span id="timer-value">0.00</span>s</span>
+                    <button id="scoreCardButton" class="score-card-btn" title="View Top Times">
+                        <i class="fa-solid fa-trophy"></i> Score Card
+                    </button>
                     <span id="best-time-label">Best: <span id="best-time-value">--</span>s</span>
                 </div>
     <div id="help-modal" class="modal-overlay">
@@ -125,6 +125,13 @@
                 Jump over obstacles and collect water drops and jerry cans to fill your score.<br>
                 Avoid obstacles to keep your water!
             </p>
+        </div>
+    </div>
+    <div id="score-card-modal" class="modal-overlay">
+        <div class="modal-content">
+            <button id="closeScoreCardModal" class="close-modal-btn" aria-label="Close">&times;</button>
+            <h2>Top Times</h2>
+            <ul id="scoreCardList"></ul>
         </div>
     </div>
     <script src="script.js"></script>
