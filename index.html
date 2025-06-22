@@ -6,16 +6,23 @@
     <title>Water Journey - Charity: Water</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css?family=Montserrat:400,500,700,900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
     <!-- Water drop between buttons at the top -->
     <div class="top-controls">
-        <button id="resetButton" class="header-button reset-top-btn">Reset</button>
-        <button id="helpButton" class="header-water-drop-btn" aria-label="How to Play">
-            <img id="header-water-drop" src="images/water_drop.png" alt="Water Drop" class="header-water-drop" draggable="false">
-            <span class="help-question">?</span>
+        <button id="resetButton" class="header-button reset-top-btn" title="Reset">
+            <i class="fa-solid fa-rotate-right"></i> Reset
         </button>
-        <button id="pauseResumeButton" class="header-button pause-top-btn">Pause</button>
+        <button id="helpButton" class="header-button help-top-btn" aria-label="How to Play" title="How to Play">
+            <i class="fa-solid fa-circle-question"></i> Help
+        </button>
+        <button id="pauseResumeButton" class="header-button pause-top-btn" title="Pause/Resume">
+            <i class="fa-solid fa-pause"></i> Pause
+        </button>
+        <button id="scoreCardButton" class="header-button score-card-btn" title="View Top Times">
+            <i class="fa-solid fa-trophy"></i> Score Card
+        </button>
     </div>
     <div id="game-wrapper">
         <header id="game-header">
