@@ -13,8 +13,8 @@
     --header-padding: 1.5vw 2vw;
     --header-gap: 2vw;
 
-    --jerrycan-width: clamp(48px, 18vw, 200px);
-    --jerrycan-height: clamp(62px, 20vw, 210px);
+    --jerrycan-width: clamp(38px, 14.4vw, 160px);   /* 20% smaller than before */
+    --jerrycan-height: clamp(49.6px, 16vw, 168px);  /* 20% smaller than before */
     --jerrycan-radius: 16px;
     --jerrycan-shadow: 0 2px 8px rgba(46,134,222,0.10);
 
@@ -37,7 +37,7 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: flex-start; /* So the reset button stays at the top */
+    justify-content: flex-start;
     background: var(--color-blue);
     font-family: var(--font-main);
     margin: 0;
@@ -53,7 +53,7 @@ h1, h2, h3, h4, h5, h6 {
     margin: 0.3em 0;
 }
 
-/* === HEADER === */
+/* === HEADER LAYOUT === */
 #game-header {
     display: flex;
     align-items: center;
@@ -64,17 +64,47 @@ h1, h2, h3, h4, h5, h6 {
     margin: 0 auto;
     background: var(--color-green, #43a047);
     color: var(--color-white);
-    padding: var(--header-padding);
+    padding: calc(1.2vw) calc(1.6vw); /* 20% less than 1.5vw 2vw */
     border-radius: 24px;
     box-sizing: border-box;
-    font-size: 1.1em;
+    font-size: 0.88em; /* 20% smaller than 1.1em */
     transition: padding 0.2s, font-size 0.2s;
 }
 
+.header-user {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    min-width: 60px;
+    margin-right: 1vw;
+}
+
+.header-user-sprite {
+    width: clamp(48px, 10.8vw, 132px);
+    height: clamp(64.8px, 14.4vw, 146.4px);
+    object-fit: contain;
+    user-select: none;
+    transition: width 0.2s, height 0.2s;
+}
+
+@media (max-width: 600px) {
+    .header-user-sprite {
+        width: clamp(33.6px, 16.8vw, 57.6px);
+        height: clamp(43.2px, 21.6vw, 76.8px);
+    }
+}
+
+/* Jerrycan on right, override margin */
+#score-jerrycan {
+    margin-left: 2vw;
+    margin-right: 0;
+}
+
+/* === HEADER TITLE === */
 .game-title {
     flex: 1 1 0;
     text-align: center;
-    font-size: 2.8vw;
+    font-size: 2.24vw; /* 20% smaller than 2.8vw */
     font-weight: 900;
     letter-spacing: 0.07em;
     text-shadow: 0 2px 12px rgba(46,134,222,0.13), 0 1px 0 #fff, 0 0 8px var(--color-yellow);
@@ -111,7 +141,8 @@ h1, h2, h3, h4, h5, h6 {
 #win-screen button,
 #game-over-screen button,
 .reset-top-btn,
-.pause-top-btn {
+.pause-top-btn,
+.score-card-btn {
     min-width: 120px;
     min-height: 52px;
     background: linear-gradient(90deg, var(--color-yellow) 60%, #ffe082 100%);
@@ -128,12 +159,18 @@ h1, h2, h3, h4, h5, h6 {
     transition: background 0.2s, transform 0.1s, box-shadow 0.2s, color 0.2s;
     outline: none;
     margin: 0 6px;
+    text-transform: none;
+    text-align: center;
+    line-height: 1.2;
 }
 
 .header-button:hover,
 #startButton:hover,
 #win-screen button:hover,
-#game-over-screen button:hover {
+#game-over-screen button:hover,
+.reset-top-btn:hover,
+.pause-top-btn:hover,
+.score-card-btn:hover {
     background: linear-gradient(90deg, #ffd54f 60%, var(--color-yellow) 100%);
     color: #fff;
     transform: translateY(-2px) scale(1.04);
@@ -143,10 +180,115 @@ h1, h2, h3, h4, h5, h6 {
 .header-button:active,
 #startButton:active,
 #win-screen button:active,
-#game-over-screen button:active {
+#game-over-screen button:active,
+.reset-top-btn:active,
+.pause-top-btn:active,
+.score-card-btn:active {
     background: var(--color-yellow);
     color: var(--color-dark-gray);
     transform: scale(0.98);
+}
+
+@media (max-width: 600px) {
+    .header-button,
+    #startButton,
+    #win-screen button,
+    #game-over-screen button,
+    .reset-top-btn,
+    .pause-top-btn,
+    .score-card-btn {
+        font-size: 0.9em;
+        padding: 7px 14px;
+        min-height: 38px;
+        min-width: 80px;
+    }
+}
+
+/* === TOP CONTROLS === */
+.top-controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 28px;
+    margin-top: 32px;
+    margin-bottom: 12px;
+}
+
+.header-water-drop {
+    width: 90px;
+    height: 90px;
+    margin: 0 8px;
+    vertical-align: middle;
+    filter: drop-shadow(0 2px 8px rgba(46,134,222,0.13));
+    user-select: none;
+}
+
+@media (max-width: 600px) {
+    .header-water-drop {
+        width: 60px;
+        height: 60px;
+        margin: 0 4px;
+    }
+}
+
+/* --- Help Button Styles --- */
+.header-water-drop-btn {
+    background: none;
+    border: none;
+    padding: 0;
+    position: relative;
+    cursor: pointer;
+    outline: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.15s;
+}
+.header-water-drop-btn:hover,
+.header-water-drop-btn:focus {
+    transform: scale(1.08) rotate(-8deg);
+    box-shadow: 0 4px 16px rgba(46,134,222,0.13);
+}
+.header-water-drop-btn .header-water-drop {
+    pointer-events: none;
+}
+.help-question {
+    position: absolute;
+    color: #fff;
+    font-weight: 900;
+    font-size: 1.5em;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    text-shadow: 0 2px 8px #2E86DE, 0 1px 0 #fff;
+    pointer-events: none;
+    user-select: none;
+    font-family: var(--font-main);
+    letter-spacing: 0.01em;
+    z-index: 2;
+    opacity: 0.92;
+    filter: drop-shadow(0 0 6px #2E86DE);
+}
+
+/* === LEVEL SELECT === */
+#level-select {
+    margin-bottom: 18px;
+    font-size: 1.1em;
+    color: #fff;
+}
+#level-select label {
+    margin-right: 8px;
+    font-weight: 700;
+}
+#level-select select {
+    font-size: 1em;
+    padding: 4px 12px;
+    border-radius: 8px;
+    border: none;
+    background: #fff;
+    color: #333;
+    font-family: var(--font-main);
+    font-weight: 700;
 }
 
 /* === GAME CONTAINER & CANVAS === */
@@ -171,71 +313,6 @@ canvas {
     height: 100% !important;
     background: transparent;
     border-radius: 16px;
-}
-
-/* === SCORING JERRY CAN === */
-#score-jerrycan {
-    position: relative;
-    width: var(--jerrycan-width);
-    height: var(--jerrycan-height);
-    margin-right: 2vw;
-    box-sizing: border-box;
-    border-radius: var(--jerrycan-radius);
-    background: var(--color-white);
-    overflow: hidden;
-    box-shadow: var(--jerrycan-shadow);
-    display: flex;
-    align-items: flex-end;
-    justify-content: center;
-}
-
-#jerrycan-fill {
-    position: absolute;
-    left: 0;
-    bottom: 0;
-    width: 100%;
-    height: 0;
-    background: linear-gradient(to top, var(--color-blue) 90%, #aee6ff 100%);
-    opacity: 0.85;
-    transition: height 0.3s cubic-bezier(.4,2,.6,1);
-    z-index: 0;
-    border-radius: 0 0 var(--jerrycan-radius) var(--jerrycan-radius);
-    box-shadow: 0 2px 8px rgba(46,134,222,0.18) inset;
-    pointer-events: none;
-}
-
-#jerrycan-img {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 1;
-    pointer-events: none;
-    user-select: none;
-    display: block;
-}
-
-#score-text {
-    position: absolute;
-    left: 0;
-    bottom: 16px;
-    width: 100%;
-    text-align: center;
-    padding: 10px 0 8px 0;
-    border-radius: var(--score-radius);
-    z-index: 2;
-    text-shadow: 0 2px 8px rgba(255,255,255,0.22), 0 1px 0 #fff, 0 0 2px #fff;
-    font-family: var(--font-main);
-    letter-spacing: 0.04em;
-    transition: color 0.2s, background 0.2s;
-    box-shadow: var(--score-shadow);
-    opacity: 1;
-    border: var(--score-border);
-    pointer-events: none;
-    color: var(--score-color);
-    background: var(--score-bg);
-    font-weight: 900;
 }
 
 /* === GAME UI & FACTS TICKER === */
@@ -320,6 +397,70 @@ canvas {
     text-align: center;
 }
 
+/* === SCORING JERRY CAN === */
+#score-jerrycan {
+    position: relative;
+    width: var(--jerrycan-width);
+    height: var(--jerrycan-height);
+    box-sizing: border-box;
+    border-radius: var(--jerrycan-radius);
+    background: var(--color-white);
+    overflow: hidden;
+    box-shadow: var(--jerrycan-shadow);
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+}
+
+#jerrycan-fill {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    height: 0;
+    background: linear-gradient(to top, var(--color-blue) 90%, #aee6ff 100%);
+    opacity: 0.85;
+    transition: height 0.3s cubic-bezier(.4,2,.6,1);
+    z-index: 0;
+    border-radius: 0 0 var(--jerrycan-radius) var(--jerrycan-radius);
+    box-shadow: 0 2px 8px rgba(46,134,222,0.18) inset;
+    pointer-events: none;
+}
+
+#jerrycan-img {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    pointer-events: none;
+    user-select: none;
+    display: block;
+}
+
+#score-text {
+    position: absolute;
+    left: 0;
+    bottom: 16px;
+    width: 100%;
+    text-align: center;
+    padding: 10px 0 8px 0;
+    border-radius: var(--score-radius);
+    z-index: 2;
+    text-shadow: 0 2px 8px rgba(255,255,255,0.22), 0 1px 0 #fff, 0 0 2px #fff;
+    font-family: var(--font-main);
+    letter-spacing: 0.04em;
+    transition: color 0.2s, background 0.2s;
+    box-shadow: var(--score-shadow);
+    opacity: 1;
+    border: var(--score-border);
+    pointer-events: none;
+    color: var(--score-color);
+    background: var(--score-bg);
+    font-weight: 900;
+}
+
 /* === TIMER BAR === */
 #timer-bar {
     position: fixed;
@@ -345,16 +486,6 @@ canvas {
 
 #timer-bar span {
     margin: 0 0.5em;
-}
-
-@media (max-width: 600px) {
-    #timer-bar {
-        font-size: 1em;
-        padding: 6px 12px;
-        gap: 1.2em;
-        min-width: 120px;
-        bottom: 8px;
-    }
 }
 
 /* === GAME SCREENS === */
@@ -443,204 +574,6 @@ canvas {
     margin-top: 18px;
 }
 
-/* === RESPONSIVE === */
-@media (max-width: 900px) {
-    #game-header {
-        padding: 2vw 2vw;
-        font-size: 1em;
-    }
-    .game-title {
-        font-size: clamp(1.2em, 4vw, 2.2em);
-    }
-    .header-button {
-        font-size: 1em;
-        padding: 10px 22px;
-    }
-}
-
-@media (max-width: 600px) {
-    #game-header {
-        padding: 2vw 1vw;
-        font-size: 0.95em;
-    }
-    .game-title {
-        font-size: clamp(1em, 5vw, 1.5em);
-    }
-    #score-jerrycan {
-        margin-right: 1vw;
-    }
-    #score-text {
-        font-size: clamp(0.85em, 4vw, 1.2em);
-        padding: 0.1em 0 0.1em 0;
-        border-radius: 8px;
-    }
-    .header-button {
-        font-size: 0.9em;
-        padding: 7px 14px;
-    }
-    #facts-ticker {
-        font-size: 0.8em;
-        padding: 0.5em 1em;
-        min-width: 0;
-        min-height: 0;
-        border-radius: 18px;
-        box-shadow: none;
-        background: var(--color-white);
-        max-width: 60vw;
-        overflow: hidden;
-        white-space: nowrap;
-        text-overflow: ellipsis;
-    }
-    #facts-ticker .cloud-circle {
-        display: none;
-    }
-    #facts-ticker span.fact-text {
-        font-size: 0.95em;
-        padding: 0;
-    }
-    #timer-bar {
-        font-size: 1em;
-        padding: 6px 12px;
-        gap: 1.2em;
-        min-width: 120px;
-        bottom: 8px;
-    }
-}
-
-/* Top controls: center, with water drop between buttons */
-.top-controls {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 28px;
-    margin-top: 32px;
-    margin-bottom: 12px;
-}
-
-.header-water-drop {
-    width: 64px;
-    height: 64px;
-    margin: 0 8px;
-    vertical-align: middle;
-    filter: drop-shadow(0 2px 8px rgba(46,134,222,0.13));
-    user-select: none;
-}
-
-@media (max-width: 600px) {
-    .header-water-drop {
-        width: 40px;
-        height: 40px;
-        margin: 0 4px;
-    }
-}
-
-/* Header layout: user left, title center, jerrycan right */
-#game-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--header-gap);
-    width: 100%;
-    max-width: var(--header-max-width);
-    margin: 0 auto;
-    background: var(--color-green, #43a047);
-    color: var(--color-white);
-    padding: var(--header-padding);
-    border-radius: 24px;
-    box-sizing: border-box;
-    font-size: 1.1em;
-    transition: padding 0.2s, font-size 0.2s;
-}
-
-.header-user {
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    min-width: 60px;
-    margin-right: 1vw;
-}
-
-.header-user-sprite {
-    width: clamp(48px, 10.8vw, 132px);
-    height: clamp(64.8px, 14.4vw, 146.4px);
-    object-fit: contain;
-    user-select: none;
-    transition: width 0.2s, height 0.2s;
-}
-
-@media (max-width: 600px) {
-    .header-user-sprite {
-        width: clamp(33.6px, 16.8vw, 57.6px);
-        height: clamp(43.2px, 21.6vw, 76.8px);
-    }
-}
-
-/* Jerrycan on right, override margin */
-#score-jerrycan {
-    margin-left: 2vw;
-    margin-right: 0;
-}
-
-/* === LEVEL SELECT === */
-#level-select {
-    margin-bottom: 18px;
-    font-size: 1.1em;
-    color: #fff;
-}
-#level-select label {
-    margin-right: 8px;
-    font-weight: 700;
-}
-#level-select select {
-    font-size: 1em;
-    padding: 4px 12px;
-    border-radius: 8px;
-    border: none;
-    background: #fff;
-    color: #333;
-    font-family: var(--font-main);
-    font-weight: 700;
-}
-
-/* --- Help Button Styles --- */
-.header-water-drop-btn {
-    background: none;
-    border: none;
-    padding: 0;
-    position: relative;
-    cursor: pointer;
-    outline: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: transform 0.15s;
-}
-.header-water-drop-btn:hover,
-.header-water-drop-btn:focus {
-    transform: scale(1.08) rotate(-8deg);
-    box-shadow: 0 4px 16px rgba(46,134,222,0.13);
-}
-.header-water-drop-btn .header-water-drop {
-    pointer-events: none;
-}
-.help-question {
-    position: absolute;
-    color: #fff;
-    font-weight: 900;
-    font-size: 2.1em;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -60%);
-    text-shadow: 0 2px 8px #2E86DE, 0 1px 0 #fff;
-    pointer-events: none;
-    user-select: none;
-    font-family: var(--font-main);
-    letter-spacing: 0.01em;
-    z-index: 2;
-    opacity: 0.92;
-    filter: drop-shadow(0 0 6px #2E86DE);
-}
-
 /* --- Modal Styles (improved spacing and typography) --- */
 .modal-overlay {
     display: none;
@@ -660,8 +593,8 @@ canvas {
     background: var(--color-blue);
     color: var(--color-white);
     border-radius: 24px;
-    padding: 48px 36px 36px 36px; /* Increased padding */
-    max-width: auto;          
+    padding: 48px 36px 36px 36px;
+    max-width: auto;
     width: 98vw;
     box-shadow: 0 8px 32px rgba(46,134,222,0.18);
     position: relative;
@@ -771,7 +704,68 @@ canvas {
     letter-spacing: 0.01em;
 }
 
+/* === RESPONSIVE === */
+@media (max-width: 900px) {
+    #game-header {
+        padding: 2vw 2vw;
+        font-size: 1em;
+    }
+    .game-title {
+        font-size: clamp(1.2em, 4vw, 2.2em);
+    }
+    .header-button {
+        font-size: 1em;
+        padding: 10px 22px;
+    }
+}
+
 @media (max-width: 600px) {
+    #game-header {
+        padding: 2vw 1vw;
+        font-size: 0.95em;
+    }
+    .game-title {
+        font-size: clamp(1em, 5vw, 1.5em);
+    }
+    #score-jerrycan {
+        margin-right: 1vw;
+    }
+    #score-text {
+        font-size: clamp(0.85em, 4vw, 1.2em);
+        padding: 0.1em 0 0.1em 0;
+        border-radius: 8px;
+    }
+    .header-button {
+        font-size: 0.9em;
+        padding: 7px 14px;
+    }
+    #facts-ticker {
+        font-size: 0.8em;
+        padding: 0.5em 1em;
+        min-width: 0;
+        min-height: 0;
+        border-radius: 18px;
+        box-shadow: none;
+        background: var(--color-white);
+        max-width: 60vw;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+    #facts-ticker .cloud-circle {
+        display: none;
+    }
+    #facts-ticker span.fact-text {
+        font-size: 0.95em;
+        padding: 0;
+    }
+    #timer-bar {
+        font-size: 1em;
+        padding: 6px 12px;
+        gap: 1.2em;
+        min-width: 120px;
+        bottom: 8px;
+    }
     .modal-content {
         padding: 18px 4vw 18px 4vw;
         max-width: 99vw;
@@ -795,4 +789,37 @@ canvas {
         font-size: 1em;
         margin-top: 18px;
     }
+}
+
+/* === START BUTTON === */
+#startButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 32px auto 0 auto;
+    text-align: center;
+    font-family: var(--font-main);
+    font-weight: 800;
+    font-size: 1.15em;
+    letter-spacing: 0.04em;
+    width: fit-content;
+    min-width: 120px;
+    min-height: 52px;
+    padding: 16px 32px;
+    border-radius: var(--button-radius, 16px);
+    background: linear-gradient(90deg, var(--color-yellow) 60%, #ffe082 100%);
+    color: var(--color-dark-gray);
+    border: none;
+    cursor: pointer;
+    box-shadow: var(--button-shadow);
+    transition: background 0.2s, transform 0.1s, box-shadow 0.2s, color 0.2s;
+    outline: none;
+    line-height: 1.2;
+}
+
+#start-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
 }
