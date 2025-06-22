@@ -43,7 +43,7 @@ body {
     margin: 0;
     color: var(--color-dark-gray);
     letter-spacing: 0.01em;
-    overflow: hidden;
+    overflow-x: hidden;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -65,7 +65,7 @@ h1, h2, h3, h4, h5, h6 {
     background: var(--color-green, #43a047);
     color: var(--color-white);
     padding: calc(1.2vw) calc(1.6vw); /* 20% less than 1.5vw 2vw */
-    border-radius: 24px;
+    border-radius: 24px 24px 0 0;
     box-sizing: border-box;
     font-size: 0.88em; /* 20% smaller than 1.1em */
     transition: padding 0.2s, font-size 0.2s;
@@ -320,7 +320,7 @@ h1, h2, h3, h4, h5, h6 {
     background: var(--color-light-blue-bg);
     overflow: hidden;
     box-sizing: border-box;
-    border-radius: 16px;
+    border-radius: 0;
     margin: 0 auto;
 }
 
@@ -491,16 +491,18 @@ canvas {
     background: rgba(255,255,255,0.92);
     color: var(--color-blue);
     font-family: var(--font-main);
-    font-size: 1.3em;
+    font-size: 1em;                /* Match footer font size */
     font-weight: 700;
-    border-radius: 18px;
-    padding: 8px 28px;
+    border-radius: 0;
+    padding: 6px 10px;             /* Decrease vertical and horizontal padding */
     box-shadow: 0 2px 12px rgba(46,134,222,0.10);
     z-index: 1;
     min-width: 180px;
     letter-spacing: 0.04em;
-    margin: 24px auto 0 auto; /* space above, centered */
-    width: fit-content;
+    margin: 0 auto 0 auto;       /* Decrease space above, keep centered */
+    width: 100%;
+    max-width: 900px;
+    box-sizing: border-box;
 }
 
 #timer-bar span {
@@ -612,9 +614,9 @@ canvas {
     background: var(--color-blue);
     color: var(--color-white);
     border-radius: 24px;
-    padding: 48px 36px 36px 36px;
-    max-width: auto;
-    width: 98vw;
+    padding: 24px 16px 20px 16px;   /* Decreased padding */
+    max-width: 340px;               /* Decreased max width */
+    width: 92vw;
     box-shadow: 0 8px 32px rgba(46,134,222,0.18);
     position: relative;
     text-align: center;
@@ -622,7 +624,7 @@ canvas {
     animation: modalIn 0.22s cubic-bezier(.4,2,.6,1);
     overflow: hidden;
     box-sizing: border-box;
-    margin: 32px 0;
+    margin: 24px 0;
 }
 
 .modal-content h2 {
@@ -841,4 +843,51 @@ canvas {
     flex-direction: column;
     align-items: center;
     justify-content: center;
+}
+
+/* === FOOTER === */
+#game-footer {
+    width: 100%;
+    max-width: 900px;
+    margin: 0 auto 0 auto;
+    padding: 10px 2vw 12px 2vw;    /* Decrease vertical padding */
+    box-sizing: border-box;
+    text-align: center;
+    background: #f7fafc;
+    color: #1565c0;
+    font-family: var(--font-main);
+    font-size: 1em;                /* Match timer bar font size */
+    border-radius: 0 0 24px 24px;   /* Rounded corners only at the bottom */
+    box-shadow: 0 2px 12px rgba(46,134,222,0.06);
+}
+
+.footer-link {
+    color: #1565c0;
+    text-decoration: none;
+    font-weight: 700;
+    transition: color 0.2s;
+}
+.footer-link:hover,
+.footer-link:focus {
+    color: var(--color-yellow);
+    text-decoration: underline;
+}
+
+/* Make the score card button content fit on one line */
+.score-card-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+    gap: 0.5em;           /* Space between icon and text */
+    padding: 8px 18px;    /* Reduce padding for a tighter fit */
+    font-size: 1em;       /* Match timer bar/footer font size */
+    min-width: unset;     /* Allow button to shrink if needed */
+    min-height: 38px;     /* Consistent with responsive buttons */
+}
+
+.score-card-btn i {
+    margin-right: 0.4em;
+    font-size: 1.1em;
+    vertical-align: middle;
 }
