@@ -473,10 +473,10 @@ canvas {
 
 /* === TIMER BAR === */
 #timer-bar {
-    position: fixed;
-    left: 50%;
-    bottom: 18px;
-    transform: translateX(-50%);
+    position: static;
+    left: unset;
+    bottom: unset;
+    transform: none;
     display: flex;
     gap: 2.5em;
     align-items: center;
@@ -489,9 +489,11 @@ canvas {
     border-radius: 18px;
     padding: 8px 28px;
     box-shadow: 0 2px 12px rgba(46,134,222,0.10);
-    z-index: 999;
+    z-index: 1;
     min-width: 180px;
     letter-spacing: 0.04em;
+    margin: 24px auto 0 auto; /* space above, centered */
+    width: fit-content;
 }
 
 #timer-bar span {
