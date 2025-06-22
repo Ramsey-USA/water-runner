@@ -37,6 +37,7 @@ const factsTicker = document.querySelector('#facts-ticker .fact-text');
 const timerValue = document.getElementById('timer-value');
 const bestTimeValue = document.getElementById('best-time-value');
 const resetButton = document.getElementById('resetButton');
+const levelSelect = document.getElementById('level');
 
 // --- Game State Variables ---
 let gameRunning = false;
@@ -47,6 +48,10 @@ let obstacles = [];
 let waterItems = [];
 let animationFrameId;
 let lastFrameTime = 0;
+let currentLevel = 'easy';
+
+// --- Falling Droplets (from jerrycan) ---
+let fallingDroplets = [];
 
 // --- Game Constants ---
 const GRAVITY = 0.5;
@@ -384,9 +389,11 @@ function gameLoop(currentTime) {
     character.draw();
 
     // Obstacles
-    if (currentTime - lastObstacleTime > Math.random() * (OBSTACLE_SPAWN_INTERVAL_MAX - OBSTACLE_SPAWN_INTERVAL_MIN) + OBSTACLE_SPAWN_INTERVAL_MIN) {
-        const obstacleWidth = Math.random() * (40 - 20) + 20;
-        const obstacleHeight = Math.random() * (50 - 30) + 30;
+    const obstacleMin = LEVELS[currentLevel].obstacleMin;
+    const obstacleMax = LEVELS[currentLevel].obstacleMax;
+    const obstacleWidth = LEVELS[currentLevel].obstacleWidth;
+    const obstacleHeight = LEVELS[currentLevel].obstacleHeight;
+    if (currentTime - lastObstacleTime > Math.random() * (obstacleMax - obstacleMin) + obstacleMin) {
         const spawnX = canvas.width;
         const groundAtSpawnX = getCurrentGroundHeight(spawnX);
         if (groundAtSpawnX !== -Infinity) {
@@ -446,9 +453,49 @@ function gameLoop(currentTime) {
             score = Math.max(0, score - 3);
             updateJerryCan();
             obstacle.isHit = true;
+
+            // --- Drop a falling droplet from the jerrycan ---
+            const jerryCanElem = document.getElementById('score-jerrycan');
+            if (jerryCanElem) {
+                const rect = jerryCanElem.getBoundingClientRect();
+                const canvasRect = canvas.getBoundingClientRect();
+                // Calculate position relative to canvas
+                const dropX = rect.left + rect.width / 2 - canvasRect.left - 14;
+                const dropY = rect.top + rect.height / 2 - canvasRect.top;
+                fallingDroplets.push({
+                    x: dropX,
+                    y: dropY,
+                    width: 28,
+                    height: 36,
+                    vy: 6 // falling speed
+                });
+            }
         }
         if (obstacle.x + obstacle.width < 0) {
             obstacles.splice(i, 1);
+        }
+    }
+
+    // Draw and update falling droplets
+    for (let i = fallingDroplets.length - 1; i >= 0; i--) {
+        const d = fallingDroplets[i];
+        d.y += d.vy * dt;
+        // Draw the droplet
+        if (
+            loadedImages.waterDrop &&
+            loadedImages.waterDrop.complete &&
+            loadedImages.waterDrop.naturalWidth !== 0
+        ) {
+            ctx.drawImage(loadedImages.waterDrop, d.x, d.y, d.width, d.height);
+        } else {
+            ctx.fillStyle = COLORS.BLUE;
+            ctx.beginPath();
+            ctx.arc(d.x + d.width / 2, d.y + d.height / 2, d.width / 2, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        // Remove if out of screen
+        if (d.y > canvas.height) {
+            fallingDroplets.splice(i, 1);
         }
     }
 
@@ -491,10 +538,12 @@ function gameLoop(currentTime) {
 // --- Game Control Functions ---
 function initGame() {
     score = 0;
-    GAME_SPEED = 7;
+    currentLevel = levelSelect ? levelSelect.value : 'easy';
+    GAME_SPEED = LEVELS[currentLevel].speed;
     character = new Character();
     obstacles = [];
     waterItems = [];
+    fallingDroplets = [];
     groundSegments = [];
     lastObstacleTime = performance.now();
     lastWaterItemTime = performance.now();
@@ -555,11 +604,12 @@ function togglePauseResume() {
 }
 
 function getGameSpeedForScore(score) {
-    if (score <= 20) return 7;
-    if (score <= 40) return 9;
-    if (score <= 60) return 11;
-    if (score <= 80) return 13;
-    return 15;
+    let base = LEVELS[currentLevel].speed;
+    if (score <= 20) return base;
+    if (score <= 40) return base + 2;
+    if (score <= 60) return base + 4;
+    if (score <= 80) return base + 6;
+    return base + 8;
 }
 
 function updateGameSpeed() {
@@ -617,7 +667,37 @@ document.addEventListener('keydown', (e) => {
 
 if (resetButton) {
     resetButton.addEventListener('click', () => {
-        startGame();
+        // Show the start screen (game menu) and allow level selection
+        gameRunning = false;
+        gamePaused = false;
+        cancelAnimationFrame(animationFrameId);
+        startScreen.classList.add('active');
+        gameOverScreen.classList.remove('active');
+        winScreen.classList.remove('active');
+        resetTimer();
+        updateJerryCan();
+    });
+}
+
+// --- Help Modal Logic ---
+const helpButton = document.getElementById('helpButton');
+const helpModal = document.getElementById('help-modal');
+const closeHelpModal = document.getElementById('closeHelpModal');
+
+if (helpButton && helpModal && closeHelpModal) {
+    helpButton.addEventListener('click', () => {
+        helpModal.classList.add('active');
+    });
+    closeHelpModal.addEventListener('click', () => {
+        helpModal.classList.remove('active');
+    });
+    helpModal.addEventListener('click', (e) => {
+        if (e.target === helpModal) helpModal.classList.remove('active');
+    });
+    document.addEventListener('keydown', (e) => {
+        if (helpModal.classList.contains('active') && (e.key === 'Escape' || e.key === 'Esc')) {
+            helpModal.classList.remove('active');
+        }
     });
 }
 
@@ -627,4 +707,28 @@ window.onload = () => {
     updateJerryCan();
     loadBestTime();
     resetTimer();
+};
+
+const LEVELS = {
+    easy: {
+        speed: 7,
+        obstacleMin: 800,
+        obstacleMax: 1800,
+        obstacleWidth: 28,
+        obstacleHeight: 38
+    },
+    normal: {
+        speed: 10,
+        obstacleMin: 600,
+        obstacleMax: 1200,
+        obstacleWidth: 38,
+        obstacleHeight: 48
+    },
+    hard: {
+        speed: 13,
+        obstacleMin: 400,
+        obstacleMax: 900,
+        obstacleWidth: 48,
+        obstacleHeight: 58
+    }
 };

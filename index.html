@@ -11,7 +11,10 @@
     <!-- Water drop between buttons at the top -->
     <div class="top-controls">
         <button id="resetButton" class="header-button reset-top-btn">Reset</button>
-        <img id="header-water-drop" src="images/water_drop.png" alt="Water Drop" class="header-water-drop" draggable="false">
+        <button id="helpButton" class="header-water-drop-btn" aria-label="How to Play">
+            <img id="header-water-drop" src="images/water_drop.png" alt="Water Drop" class="header-water-drop" draggable="false">
+            <span class="help-question">?</span>
+        </button>
         <button id="pauseResumeButton" class="header-button pause-top-btn">Pause</button>
     </div>
     <div id="game-wrapper">
@@ -37,6 +40,14 @@
             <section id="start-screen" class="game-screen active">
                 <h2>The Water Journey</h2>
                 <p>Millions walk daily for water. Help deliver clean water!</p>
+                <div id="level-select">
+                    <label for="level">Difficulty:</label>
+                    <select id="level">
+                        <option value="easy" selected>Easy</option>
+                        <option value="normal">Normal</option>
+                        <option value="hard">Hard</option>
+                    </select>
+                </div>
                 <button id="startButton">Start Journey</button>
                 <p class="awareness-info">100% of Charity: Water's public donations fund clean water projects.</p>
             </section>
@@ -76,6 +87,38 @@
                 </div>
             </div>
         </main>
+    </div>
+    <div id="help-modal" class="modal-overlay">
+        <div class="modal-content">
+            <button id="closeHelpModal" class="close-modal-btn" aria-label="Close">&times;</button>
+            <h2>Gameplay &amp; Scoring</h2>
+            <ul class="score-legend">
+                <li>
+                    <img src="images/water_drop.png" alt="Water Drop" class="legend-icon">
+                    <strong>Water Drop</strong>: <span class="legend-plus">+1 L</span>
+                </li>
+                <li>
+                    <img src="images/yellow_jerry_can.png" alt="Jerry Can" class="legend-icon">
+                    <strong>Jerry Can</strong>: <span class="legend-plus">+5 L</span>
+                </li>
+                <li>
+                    <img src="images/thorny_bush.png" alt="Bush" class="legend-icon">
+                    <img src="images/obstacle_rock.png" alt="Rock" class="legend-icon">
+                    <img src="images/obstacle_snake.png" alt="Snake" class="legend-icon">
+                    <img src="images/obstacle_seagull.png" alt="Seagull" class="legend-icon">
+                    <strong>Obstacle</strong>: <span class="legend-minus">-3 L</span> &amp; lose a droplet
+                </li>
+                <li>
+                    <img src="images/water_drop.png" alt="Falling Drop" class="legend-icon legend-falling">
+                    <strong>Falling Drop</strong>: Visual only (lost water)
+                </li>
+            </ul>
+            <p class="legend-instructions">
+                <strong>How to Play:</strong><br>
+                Jump over obstacles and collect water drops and jerry cans to fill your score.<br>
+                Avoid obstacles to keep your water!
+            </p>
+        </div>
     </div>
     <script src="script.js"></script>
 </body>
