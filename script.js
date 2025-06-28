@@ -37,16 +37,30 @@ const factsTicker = document.querySelector('#facts-ticker .fact-text');
 const timerValue = document.getElementById('timer-value');
 const bestTimeValue = document.getElementById('best-time-value');
 const resetButton = document.getElementById('resetButton');
+const levelSelect = document.getElementById('level');
+const scoreCardButton = document.getElementById('scoreCardButton');
+const scoreCardModal = document.getElementById('score-card-modal');
+const closeScoreCardModal = document.getElementById('closeScoreCardModal');
+const scoreCardList = document.getElementById('scoreCardList');
+const helpButton = document.getElementById('helpButton');
+const helpModal = document.getElementById('help-modal');
+const closeHelpModal = document.getElementById('closeHelpModal');
 
 // --- Game State Variables ---
 let gameRunning = false;
 let gamePaused = false;
+let isPaused = false;
 let score = 0;
 let character;
 let obstacles = [];
 let waterItems = [];
 let animationFrameId;
 let lastFrameTime = 0;
+let currentLevel = 'easy';
+let fallingDroplets = [];
+let groundSegments = [];
+let splashDroplets = [];
+let splashActive = false;
 
 // --- Game Constants ---
 const GRAVITY = 0.5;
@@ -83,8 +97,32 @@ const COLORS = {
     GROUND: '#8B4513'
 };
 
+// --- Level Settings ---
+const LEVELS = {
+    easy: {
+        speed: 7,
+        obstacleMin: 800,
+        obstacleMax: 1800,
+        obstacleWidth: 28,
+        obstacleHeight: 38
+    },
+    normal: {
+        speed: 10,
+        obstacleMin: 600,
+        obstacleMax: 1200,
+        obstacleWidth: 38,
+        obstacleHeight: 48
+    },
+    hard: {
+        speed: 13,
+        obstacleMin: 400,
+        obstacleMax: 900,
+        obstacleWidth: 48,
+        obstacleHeight: 58
+    }
+};
+
 // --- Terrain / Rows Logic ---
-let groundSegments = [];
 const MIN_GROUND_HEIGHT = 50;
 const MAX_GROUND_HEIGHT = 150;
 const GROUND_SEGMENT_WIDTH_MIN = 200;
@@ -180,6 +218,7 @@ function Character() {
         if (!this.isJumping) {
             this.velocityY = JUMP_STRENGTH;
             this.isJumping = true;
+            playSound(sounds.jump);
         }
     };
 }
@@ -190,7 +229,7 @@ function Obstacle(x, y, width, height, type) {
     this.width = width;
     this.height = height;
     this.isHit = false;
-    this.type = type; // 'bush', 'rock', 'seagull', 'snake'
+    this.type = type;
 
     this.draw = function() {
         if (this.type === 'bush' && loadedImages.thornyBush.complete && loadedImages.thornyBush.naturalWidth !== 0) {
@@ -218,7 +257,7 @@ function WaterItem(x, y, width, height, type = 'drop') {
     this.width = width;
     this.height = height;
     this.collected = false;
-    this.type = type; // 'drop' or 'barrel'
+    this.type = type;
     this.value = (type === 'barrel') ? 5 : 1;
 
     this.draw = function() {
@@ -289,8 +328,6 @@ function saveBestTime(time) {
 }
 
 // --- Water Splash Effect ---
-let splashDroplets = [];
-let splashActive = false;
 const SPLASH_DROPLET_COUNT = 32;
 
 function startSplashEffect() {
@@ -334,7 +371,6 @@ function drawSplashEffect() {
         ctx.shadowBlur = 8;
         ctx.fill();
 
-        // Optional: highlight
         ctx.beginPath();
         ctx.arc(d.x + d.radius/3, d.y - d.radius/3, d.radius/3, 0, Math.PI * 2);
         ctx.fillStyle = "rgba(255,255,255,0.5)";
@@ -343,6 +379,83 @@ function drawSplashEffect() {
 
         ctx.restore();
     });
+}
+
+// --- Sound Effects ---
+const sounds = {
+    jump: new Audio('sounds/jump.wav'),
+    collect: new Audio('sounds/water_drip.wav'),
+    hit: new Audio('sounds/sprite_ouch.mp3'),
+    win: new Audio('sounds/winning_game.mp3'),
+    reset: new Audio('sounds/reset_button.mp3')
+};
+
+// Utility to play a sound safely
+function playSound(sound, isRapid = false) {
+    if (!sound) return;
+    if (isRapid) {
+        // For rapid sounds (like collect), create a new instance to avoid stalling
+        const s = new Audio(sound.src);
+        s.volume = sound.volume ?? 1;
+        s.play();
+    } else {
+        sound.currentTime = 0;
+        sound.play();
+    }
+}
+
+// --- Update Character jump to play sound ---
+Character.prototype.jump = function() {
+    if (!this.isJumping) {
+        this.velocityY = JUMP_STRENGTH;
+        this.isJumping = true;
+        playSound(sounds.jump);
+    }
+};
+
+// --- Play sound when collecting water ---
+function collectWaterItem(index) {
+    score = Math.max(0, score + waterItems[index].value);
+    updateJerryCan();
+    waterItems.splice(index, 1);
+    playSound(sounds.collect, true); // Use rapid mode for collect
+}
+
+// --- Play sound when hitting obstacle ---
+function hitObstacle(obstacle) {
+    score = Math.max(0, score - 3);
+    updateJerryCan();
+    obstacle.isHit = true;
+    playSound(sounds.hit);
+}
+
+// --- Background Music by Level ---
+const backgroundMusic = {
+    easy: new Audio('sounds/level_one_background_music.mp3'),
+    normal: new Audio('sounds/level_two_background_music.mp3'),
+    hard: new Audio('sounds/level_three_background_music.mp3')
+};
+
+// Ensure all music loops and is not too loud
+for (const music of Object.values(backgroundMusic)) {
+    music.loop = true;
+    music.volume = 0.5;
+}
+
+// Utility to stop all background music
+function stopAllMusic() {
+    for (const music of Object.values(backgroundMusic)) {
+        music.pause();
+        music.currentTime = 0;
+    }
+}
+
+// Play music for the current level
+function playLevelMusic(level) {
+    stopAllMusic();
+    if (backgroundMusic[level]) {
+        backgroundMusic[level].play();
+    }
 }
 
 // --- Game Loop ---
@@ -384,9 +497,11 @@ function gameLoop(currentTime) {
     character.draw();
 
     // Obstacles
-    if (currentTime - lastObstacleTime > Math.random() * (OBSTACLE_SPAWN_INTERVAL_MAX - OBSTACLE_SPAWN_INTERVAL_MIN) + OBSTACLE_SPAWN_INTERVAL_MIN) {
-        const obstacleWidth = Math.random() * (40 - 20) + 20;
-        const obstacleHeight = Math.random() * (50 - 30) + 30;
+    const obstacleMin = LEVELS[currentLevel].obstacleMin;
+    const obstacleMax = LEVELS[currentLevel].obstacleMax;
+    const obstacleWidth = LEVELS[currentLevel].obstacleWidth;
+    const obstacleHeight = LEVELS[currentLevel].obstacleHeight;
+    if (currentTime - lastObstacleTime > Math.random() * (obstacleMax - obstacleMin) + obstacleMin) {
         const spawnX = canvas.width;
         const groundAtSpawnX = getCurrentGroundHeight(spawnX);
         if (groundAtSpawnX !== -Infinity) {
@@ -443,12 +558,47 @@ function gameLoop(currentTime) {
         obstacle.update(dt);
         obstacle.draw();
         if (!obstacle.isHit && checkCollision(character, obstacle)) {
-            score = Math.max(0, score - 3);
-            updateJerryCan();
-            obstacle.isHit = true;
+            hitObstacle(obstacle);
+
+            // --- Drop a falling droplet from the jerrycan ---
+            const jerryCanElem = document.getElementById('score-jerrycan');
+            if (jerryCanElem) {
+                const rect = jerryCanElem.getBoundingClientRect();
+                const canvasRect = canvas.getBoundingClientRect();
+                const dropX = rect.left + rect.width / 2 - canvasRect.left - 14;
+                const dropY = rect.top + rect.height / 2 - canvasRect.top;
+                fallingDroplets.push({
+                    x: dropX,
+                    y: dropY,
+                    width: 28,
+                    height: 36,
+                    vy: 6
+                });
+            }
         }
         if (obstacle.x + obstacle.width < 0) {
             obstacles.splice(i, 1);
+        }
+    }
+
+    // Draw and update falling droplets
+    for (let i = fallingDroplets.length - 1; i >= 0; i--) {
+        const d = fallingDroplets[i];
+        d.y += d.vy * dt;
+        if (
+            loadedImages.waterDrop &&
+            loadedImages.waterDrop.complete &&
+            loadedImages.waterDrop.naturalWidth !== 0
+        ) {
+            ctx.drawImage(loadedImages.waterDrop, d.x, d.y, d.width, d.height);
+        } else {
+            ctx.fillStyle = COLORS.BLUE;
+            ctx.beginPath();
+            ctx.arc(d.x + d.width / 2, d.y + d.height / 2, d.width / 2, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        if (d.y > canvas.height) {
+            fallingDroplets.splice(i, 1);
         }
     }
 
@@ -458,9 +608,7 @@ function gameLoop(currentTime) {
         item.update(dt);
         item.draw();
         if (checkCollision(character, item)) {
-            score = Math.max(0, score + item.value);
-            updateJerryCan();
-            waterItems.splice(i, 1);
+            collectWaterItem(i);
         } else if (item.x + item.width < 0) {
             waterItems.splice(i, 1);
         }
@@ -491,10 +639,12 @@ function gameLoop(currentTime) {
 // --- Game Control Functions ---
 function initGame() {
     score = 0;
-    GAME_SPEED = 7;
+    currentLevel = levelSelect ? levelSelect.value : 'easy';
+    GAME_SPEED = LEVELS[currentLevel].speed;
     character = new Character();
     obstacles = [];
     waterItems = [];
+    fallingDroplets = [];
     groundSegments = [];
     lastObstacleTime = performance.now();
     lastWaterItemTime = performance.now();
@@ -504,6 +654,8 @@ function initGame() {
     updateJerryCan();
     generateNewGroundSegment();
     generateNewGroundSegment();
+    milestoneShown = false;
+    hideMilestonePopup();
 }
 
 function startGame() {
@@ -516,16 +668,19 @@ function startGame() {
     winScreen.classList.remove('active');
     gameRunning = true;
     gamePaused = false;
-    pauseResumeButton.textContent = "Pause";
+    isPaused = false;
+    pauseResumeButton.innerHTML = '<i class="fa-solid fa-pause"></i> Pause';
     lastFrameTime = performance.now();
     resetTimer();
     startTimer();
+    playLevelMusic(currentLevel); // <-- Play music for selected level
     animationFrameId = requestAnimationFrame(gameLoop);
 }
 
 function endGame(reason = "obstacle") {
     gameRunning = false;
     cancelAnimationFrame(animationFrameId);
+    stopAllMusic();
     finalScoreText.textContent = `You collected ${score} liters of water.`;
     gameOverFact.textContent = awarenessFacts[Math.floor(Math.random() * awarenessFacts.length)];
     gameOverScreen.classList.add('active');
@@ -535,35 +690,17 @@ function endGame(reason = "obstacle") {
 function winGame() {
     gameRunning = false;
     cancelAnimationFrame(animationFrameId);
+    stopAllMusic();
+    if (sounds.win) {
+        sounds.win.currentTime = 0;
+        sounds.win.play();
+    }
     winScreen.classList.add('active');
     stopTimer();
     saveBestTime(elapsedTime);
+    saveTopTime(elapsedTime);
     startSplashEffect();
     finalScoreText.textContent = `You collected ${score} liters of water in ${elapsedTime.toFixed(2)} seconds!`;    
-}
-
-function togglePauseResume() {
-    if (!gameRunning) return;
-    gamePaused = !gamePaused;
-    if (gamePaused) {
-        pauseResumeButton.textContent = "Resume";
-    } else {
-        pauseResumeButton.textContent = "Pause";
-        lastFrameTime = performance.now();
-        animationFrameId = requestAnimationFrame(gameLoop);
-    }
-}
-
-function getGameSpeedForScore(score) {
-    if (score <= 20) return 7;
-    if (score <= 40) return 9;
-    if (score <= 60) return 11;
-    if (score <= 80) return 13;
-    return 15;
-}
-
-function updateGameSpeed() {
-    GAME_SPEED = getGameSpeedForScore(score);
 }
 
 // --- UI Updates ---
@@ -572,6 +709,25 @@ function updateJerryCan() {
     jerrycanFill.style.height = `${fillPercentage * 100}%`;
     scoreText.textContent = `${score} L`;
     updateGameSpeed();
+
+    // Milestone logic: show popup at score 50, only once per game
+    if (!milestoneShown && score >= 50) {
+        milestoneShown = true;
+        showMilestonePopup();
+    }
+}
+
+function getGameSpeedForScore(score) {
+    let base = LEVELS[currentLevel].speed;
+    if (score <= 20) return base;
+    if (score <= 40) return base + 2;
+    if (score <= 60) return base + 4;
+    if (score <= 80) return base + 6;
+    return base + 8;
+}
+
+function updateGameSpeed() {
+    GAME_SPEED = getGameSpeedForScore(score);
 }
 
 // --- Responsive Canvas ---
@@ -589,7 +745,36 @@ window.addEventListener('resize', () => {
     generateNewGroundSegment();
 });
 
-// --- Event Listeners ---
+// --- Pause/Resume Logic ---
+pauseResumeButton.addEventListener('click', () => {
+    if (!gameRunning) return;
+    isPaused = !isPaused;
+    gamePaused = isPaused;
+    if (isPaused) {
+        pauseResumeButton.innerHTML = '<i class="fa-solid fa-play"></i> Resume';
+        for (const music of Object.values(backgroundMusic)) music.pause();
+    } else {
+        pauseResumeButton.innerHTML = '<i class="fa-solid fa-pause"></i> Pause';
+        if (backgroundMusic[currentLevel]) backgroundMusic[currentLevel].play();
+        lastFrameTime = performance.now();
+        animationFrameId = requestAnimationFrame(gameLoop);
+    }
+});
+
+// --- Keyboard Controls ---
+document.addEventListener('keydown', (e) => {
+    if (e.code === 'Space') {
+        if (gameRunning && !gamePaused) {
+            character.jump();
+        }
+        e.preventDefault();
+    } else if (e.code === 'KeyP') {
+        pauseResumeButton.click();
+        e.preventDefault();
+    }
+});
+
+// --- Other UI Event Listeners ---
 startButton.addEventListener('click', startGame);
 restartButton.addEventListener('click', startGame);
 winRestartButton.addEventListener('click', startGame);
@@ -601,25 +786,102 @@ winLearnMoreButton.addEventListener('click', () => {
     window.open('https://www.charitywater.org/', '_blank');
 });
 
-pauseResumeButton.addEventListener('click', togglePauseResume);
-
-document.addEventListener('keydown', (e) => {
-    if (e.code === 'Space') {
-        if (gameRunning && !gamePaused) {
-            character.jump();
-        }
-        e.preventDefault();
-    } else if (e.code === 'KeyP') {
-        togglePauseResume();
-        e.preventDefault();
-    }
-});
-
 if (resetButton) {
     resetButton.addEventListener('click', () => {
-        startGame();
+        playSound(sounds.reset); // Play reset sound
+        gameRunning = false;
+        gamePaused = false;
+        cancelAnimationFrame(animationFrameId);
+        startScreen.classList.add('active');
+        gameOverScreen.classList.remove('active');
+        winScreen.classList.remove('active');
+        resetTimer();
+        updateJerryCan();
     });
 }
+
+// --- Help Modal Logic ---
+if (helpButton && helpModal && closeHelpModal) {
+    helpButton.addEventListener('click', () => {
+        helpModal.classList.add('active');
+    });
+    closeHelpModal.addEventListener('click', () => {
+        helpModal.classList.remove('active');
+    });
+    helpModal.addEventListener('click', (e) => {
+        if (e.target === helpModal) helpModal.classList.remove('active');
+    });
+    document.addEventListener('keydown', (e) => {
+        if (helpModal.classList.contains('active') && (e.key === 'Escape' || e.key === 'Esc')) {
+            helpModal.classList.remove('active');
+        }
+    });
+}
+
+// --- Score Card Modal Logic ---
+function saveTopTime(time) {
+    let topTimes = JSON.parse(localStorage.getItem('waterRunnerTopTimes') || '[]');
+    topTimes.push(time);
+    topTimes = topTimes.filter(t => !isNaN(t));
+    topTimes.sort((a, b) => a - b);
+    topTimes = topTimes.slice(0, 5);
+    localStorage.setItem('waterRunnerTopTimes', JSON.stringify(topTimes));
+}
+
+function loadTopTimes() {
+    let topTimes = JSON.parse(localStorage.getItem('waterRunnerTopTimes') || '[]');
+    return topTimes.filter(t => !isNaN(t));
+}
+
+function updateScoreCardList() {
+    const topTimes = loadTopTimes();
+    scoreCardList.innerHTML = '';
+    if (topTimes.length === 0) {
+        scoreCardList.innerHTML = '<li>No times yet. Finish a run to record your time!</li>';
+    } else {
+        topTimes.forEach((t, i) => {
+            const li = document.createElement('li');
+            li.textContent = `#${i + 1}: ${t.toFixed(2)}s`;
+            scoreCardList.appendChild(li);
+        });
+    }
+}
+
+if (scoreCardButton && scoreCardModal && closeScoreCardModal) {
+    scoreCardButton.addEventListener('click', () => {
+        updateScoreCardList();
+        scoreCardModal.classList.add('active');
+    });
+    closeScoreCardModal.addEventListener('click', () => {
+        scoreCardModal.classList.remove('active');
+    });
+    scoreCardModal.addEventListener('click', (e) => {
+        if (e.target === scoreCardModal) scoreCardModal.classList.remove('active');
+    });
+    document.addEventListener('keydown', (e) => {
+        if (scoreCardModal.classList.contains('active') && (e.key === 'Escape' || e.key === 'Esc')) {
+            scoreCardModal.classList.remove('active');
+        }
+    });
+}
+
+// --- Milestone Popup State ---
+let milestoneShown = false;
+
+// Show the milestone popup
+function showMilestonePopup() {
+    const popup = document.getElementById('milestone-popup');
+    if (popup) popup.style.display = 'flex';
+}
+
+// Hide the milestone popup
+function hideMilestonePopup() {
+    const popup = document.getElementById('milestone-popup');
+    if (popup) popup.style.display = 'none';
+}
+
+// Attach close event
+document.getElementById('closeMilestonePopup').onclick = hideMilestonePopup;
 
 // --- Initialization ---
 window.onload = () => {

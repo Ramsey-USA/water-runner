@@ -6,13 +6,20 @@
     <title>Water Journey - Charity: Water</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css?family=Montserrat:400,500,700,900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
     <!-- Water drop between buttons at the top -->
     <div class="top-controls">
-        <button id="resetButton" class="header-button reset-top-btn">Reset</button>
-        <img id="header-water-drop" src="images/water_drop.png" alt="Water Drop" class="header-water-drop" draggable="false">
-        <button id="pauseResumeButton" class="header-button pause-top-btn">Pause</button>
+        <button id="resetButton" class="header-button reset-top-btn" title="Reset">
+            <i class="fa-solid fa-rotate-right"></i> Reset
+        </button>
+        <button id="helpButton" class="header-button help-top-btn" aria-label="How to Play" title="How to Play">
+            <i class="fa-solid fa-circle-question"></i> Help
+        </button>
+        <button id="pauseResumeButton" class="header-button pause-top-btn" title="Pause/Resume">
+            <i class="fa-solid fa-pause"></i> Pause
+        </button>
     </div>
     <div id="game-wrapper">
         <header id="game-header">
@@ -37,6 +44,14 @@
             <section id="start-screen" class="game-screen active">
                 <h2>The Water Journey</h2>
                 <p>Millions walk daily for water. Help deliver clean water!</p>
+                <div id="level-select">
+                    <label for="level">Difficulty:</label>
+                    <select id="level">
+                        <option value="easy" selected>Easy</option>
+                        <option value="normal">Normal</option>
+                        <option value="hard">Hard</option>
+                    </select>
+                </div>
                 <button id="startButton">Start Journey</button>
                 <p class="awareness-info">100% of Charity: Water's public donations fund clean water projects.</p>
             </section>
@@ -70,13 +85,70 @@
                     <span class="cloud-circle cloud5"></span>
                     <span class="fact-text"></span>
                 </div>
-                <div id="timer-bar">
-                    <span id="timer-label">Time: <span id="timer-value">0.00</span>s</span>
-                    <span id="best-time-label">Best: <span id="best-time-value">--</span>s</span>
-                </div>
             </div>
         </main>
     </div>
+                <div id="timer-bar">
+                    <span id="timer-label">Time: <span id="timer-value">0.00</span>s</span>
+                    <button id="scoreCardButton" class="score-card-btn" title="View Top Times">
+                        <i class="fa-solid fa-trophy"></i> Score Card
+                    </button>
+                    <span id="best-time-label">Best: <span id="best-time-value">--</span>s</span>
+                </div>
+    <div id="help-modal" class="modal-overlay">
+        <div class="modal-content">
+            <button id="closeHelpModal" class="close-modal-btn" aria-label="Close">&times;</button>
+            <h2>Gameplay &amp; Scoring</h2>
+            <ul class="score-legend">
+                <li>
+                    <img src="images/water_drop.png" alt="Water Drop" class="legend-icon">
+                    <strong>Water Drop</strong>: <span class="legend-plus">+1 L</span>
+                </li>
+                <li>
+                    <img src="images/yellow_jerry_can.png" alt="Jerry Can" class="legend-icon">
+                    <strong>Jerry Can</strong>: <span class="legend-plus">+5 L</span>
+                </li>
+                <li>
+                    <img src="images/thorny_bush.png" alt="Bush" class="legend-icon">
+                    <img src="images/obstacle_rock.png" alt="Rock" class="legend-icon">
+                    <img src="images/obstacle_snake.png" alt="Snake" class="legend-icon">
+                    <img src="images/obstacle_seagull.png" alt="Seagull" class="legend-icon">
+                    <strong>Obstacle</strong>: <span class="legend-minus">-3 L</span> &amp; lose a droplet
+                </li>
+                <li>
+                    <img src="images/water_drop.png" alt="Falling Drop" class="legend-icon legend-falling">
+                    <strong>Falling Drop</strong>: Visual only (lost water)
+                </li>
+            </ul>
+            <p class="legend-instructions">
+                <strong>How to Play:</strong><br>
+                Jump over obstacles and collect water drops and jerry cans to fill your score.<br>
+                Avoid obstacles to keep your water!
+            </p>
+        </div>
+    </div>
+    <div id="score-card-modal" class="modal-overlay">
+        <div class="modal-content">
+            <button id="closeScoreCardModal" class="close-modal-btn" aria-label="Close">&times;</button>
+            <h2>Top Times</h2>
+            <ul id="scoreCardList"></ul>
+        </div>
+    </div>
+    <div id="milestone-popup" class="milestone-popup" style="display:none;">
+        <span class="milestone-message">
+            🚰 Halfway there! You’ve collected 50 liters.<br>
+            You’re halfway to delivering clean water—keep going!
+        </span>
+        <button id="closeMilestonePopup" class="close-milestone-btn" aria-label="Close">&times;</button>
+    </div>
+    <footer id="game-footer">
+        <a href="https://www.charitywater.org/" target="_blank" rel="noopener" class="footer-link">
+            Learn more at <strong>charity: water</strong>
+        </a>
+        <a href="https://www.charitywater.org/#donate" target="_blank" rel="noopener" class="donate-btn">
+            <i class="fa-solid fa-hand-holding-droplet"></i> Donate
+        </a>
+    </footer>
     <script src="script.js"></script>
 </body>
 </html>
