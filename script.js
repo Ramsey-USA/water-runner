@@ -385,7 +385,9 @@ function drawSplashEffect() {
 const sounds = {
     jump: new Audio('sounds/jump.wav'),
     collect: new Audio('sounds/water_drip.wav'),
-    hit: new Audio('sounds/sprite_ouch.mp3')
+    hit: new Audio('sounds/sprite_ouch.mp3'),
+    win: new Audio('sounds/winning_game.mp3'),
+    reset: new Audio('sounds/reset_button.mp3')
 };
 
 // Utility to play a sound safely
@@ -689,6 +691,10 @@ function winGame() {
     gameRunning = false;
     cancelAnimationFrame(animationFrameId);
     stopAllMusic();
+    if (sounds.win) {
+        sounds.win.currentTime = 0;
+        sounds.win.play();
+    }
     winScreen.classList.add('active');
     stopTimer();
     saveBestTime(elapsedTime);
@@ -782,6 +788,7 @@ winLearnMoreButton.addEventListener('click', () => {
 
 if (resetButton) {
     resetButton.addEventListener('click', () => {
+        playSound(sounds.reset); // Play reset sound
         gameRunning = false;
         gamePaused = false;
         cancelAnimationFrame(animationFrameId);
