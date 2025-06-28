@@ -218,6 +218,7 @@ function Character() {
         if (!this.isJumping) {
             this.velocityY = JUMP_STRENGTH;
             this.isJumping = true;
+            playSound(sounds.jump);
         }
     };
 }
@@ -380,6 +381,81 @@ function drawSplashEffect() {
     });
 }
 
+// --- Sound Effects ---
+const sounds = {
+    jump: new Audio('sounds/jump.wav'),
+    collect: new Audio('sounds/water_drip.wav'),
+    hit: new Audio('sounds/sprite_ouch.mp3')
+};
+
+// Utility to play a sound safely
+function playSound(sound, isRapid = false) {
+    if (!sound) return;
+    if (isRapid) {
+        // For rapid sounds (like collect), create a new instance to avoid stalling
+        const s = new Audio(sound.src);
+        s.volume = sound.volume ?? 1;
+        s.play();
+    } else {
+        sound.currentTime = 0;
+        sound.play();
+    }
+}
+
+// --- Update Character jump to play sound ---
+Character.prototype.jump = function() {
+    if (!this.isJumping) {
+        this.velocityY = JUMP_STRENGTH;
+        this.isJumping = true;
+        playSound(sounds.jump);
+    }
+};
+
+// --- Play sound when collecting water ---
+function collectWaterItem(index) {
+    score = Math.max(0, score + waterItems[index].value);
+    updateJerryCan();
+    waterItems.splice(index, 1);
+    playSound(sounds.collect, true); // Use rapid mode for collect
+}
+
+// --- Play sound when hitting obstacle ---
+function hitObstacle(obstacle) {
+    score = Math.max(0, score - 3);
+    updateJerryCan();
+    obstacle.isHit = true;
+    playSound(sounds.hit);
+}
+
+// --- Background Music by Level ---
+const backgroundMusic = {
+    easy: new Audio('sounds/level_one_background_music.mp3'),
+    normal: new Audio('sounds/level_two_background_music.mp3'),
+    hard: new Audio('sounds/level_three_background_music.mp3')
+};
+
+// Ensure all music loops and is not too loud
+for (const music of Object.values(backgroundMusic)) {
+    music.loop = true;
+    music.volume = 0.5;
+}
+
+// Utility to stop all background music
+function stopAllMusic() {
+    for (const music of Object.values(backgroundMusic)) {
+        music.pause();
+        music.currentTime = 0;
+    }
+}
+
+// Play music for the current level
+function playLevelMusic(level) {
+    stopAllMusic();
+    if (backgroundMusic[level]) {
+        backgroundMusic[level].play();
+    }
+}
+
 // --- Game Loop ---
 function gameLoop(currentTime) {
     if (!gameRunning || gamePaused) return;
@@ -480,9 +556,7 @@ function gameLoop(currentTime) {
         obstacle.update(dt);
         obstacle.draw();
         if (!obstacle.isHit && checkCollision(character, obstacle)) {
-            score = Math.max(0, score - 3);
-            updateJerryCan();
-            obstacle.isHit = true;
+            hitObstacle(obstacle);
 
             // --- Drop a falling droplet from the jerrycan ---
             const jerryCanElem = document.getElementById('score-jerrycan');
@@ -532,9 +606,7 @@ function gameLoop(currentTime) {
         item.update(dt);
         item.draw();
         if (checkCollision(character, item)) {
-            score = Math.max(0, score + item.value);
-            updateJerryCan();
-            waterItems.splice(i, 1);
+            collectWaterItem(i);
         } else if (item.x + item.width < 0) {
             waterItems.splice(i, 1);
         }
@@ -599,12 +671,14 @@ function startGame() {
     lastFrameTime = performance.now();
     resetTimer();
     startTimer();
+    playLevelMusic(currentLevel); // <-- Play music for selected level
     animationFrameId = requestAnimationFrame(gameLoop);
 }
 
 function endGame(reason = "obstacle") {
     gameRunning = false;
     cancelAnimationFrame(animationFrameId);
+    stopAllMusic();
     finalScoreText.textContent = `You collected ${score} liters of water.`;
     gameOverFact.textContent = awarenessFacts[Math.floor(Math.random() * awarenessFacts.length)];
     gameOverScreen.classList.add('active');
@@ -614,6 +688,7 @@ function endGame(reason = "obstacle") {
 function winGame() {
     gameRunning = false;
     cancelAnimationFrame(animationFrameId);
+    stopAllMusic();
     winScreen.classList.add('active');
     stopTimer();
     saveBestTime(elapsedTime);
@@ -671,9 +746,10 @@ pauseResumeButton.addEventListener('click', () => {
     gamePaused = isPaused;
     if (isPaused) {
         pauseResumeButton.innerHTML = '<i class="fa-solid fa-play"></i> Resume';
-        // Do not call requestAnimationFrame here!
+        for (const music of Object.values(backgroundMusic)) music.pause();
     } else {
         pauseResumeButton.innerHTML = '<i class="fa-solid fa-pause"></i> Pause';
+        if (backgroundMusic[currentLevel]) backgroundMusic[currentLevel].play();
         lastFrameTime = performance.now();
         animationFrameId = requestAnimationFrame(gameLoop);
     }
