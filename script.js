@@ -383,14 +383,14 @@ function drawSplashEffect() {
 
 // --- Sound Effects ---
 const sounds = {
-    jump: new Audio('sounds/jump.wav'),
+    jump: new Audio('sounds/jump.mp3'), // <-- Changed from jump.wav to jump.mp3
     collect: new Audio('sounds/water_drip.wav'),
     hit: new Audio('sounds/sprite_ouch.mp3'),
     win: new Audio('sounds/winning_game.mp3'),
     reset: new Audio('sounds/reset_button.mp3'),
     pause: new Audio('sounds/pause_button.mp3'),
     help: new Audio('sounds/help_button.mp3'),
-    scoreCard: new Audio('sounds/score_card.mp3') // <-- Add this line
+    scoreCard: new Audio('sounds/score_card.mp3')
 };
 
 // Utility to play a sound safely
