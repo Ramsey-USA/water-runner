@@ -387,7 +387,10 @@ const sounds = {
     collect: new Audio('sounds/water_drip.wav'),
     hit: new Audio('sounds/sprite_ouch.mp3'),
     win: new Audio('sounds/winning_game.mp3'),
-    reset: new Audio('sounds/reset_button.mp3')
+    reset: new Audio('sounds/reset_button.mp3'),
+    pause: new Audio('sounds/pause_button.mp3'),
+    help: new Audio('sounds/help_button.mp3'),
+    scoreCard: new Audio('sounds/score_card.mp3') // <-- Add this line
 };
 
 // Utility to play a sound safely
@@ -750,6 +753,7 @@ pauseResumeButton.addEventListener('click', () => {
     if (!gameRunning) return;
     isPaused = !isPaused;
     gamePaused = isPaused;
+    playSound(sounds.pause); // <-- Play pause/resume sound
     if (isPaused) {
         pauseResumeButton.innerHTML = '<i class="fa-solid fa-play"></i> Resume';
         for (const music of Object.values(backgroundMusic)) music.pause();
@@ -803,6 +807,7 @@ if (resetButton) {
 // --- Help Modal Logic ---
 if (helpButton && helpModal && closeHelpModal) {
     helpButton.addEventListener('click', () => {
+        playSound(sounds.help); // <-- Play help button sound
         helpModal.classList.add('active');
     });
     closeHelpModal.addEventListener('click', () => {
@@ -849,6 +854,7 @@ function updateScoreCardList() {
 
 if (scoreCardButton && scoreCardModal && closeScoreCardModal) {
     scoreCardButton.addEventListener('click', () => {
+        playSound(sounds.scoreCard); // <-- Play score card sound
         updateScoreCardList();
         scoreCardModal.classList.add('active');
     });
