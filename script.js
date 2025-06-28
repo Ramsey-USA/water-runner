@@ -280,11 +280,28 @@ function WaterItem(x, y, width, height, type = 'drop') {
     };
 }
 
-function checkCollision(obj1, obj2) {
-    return obj1.x < obj2.x + obj2.width &&
-           obj1.x + obj1.width > obj2.x &&
-           obj1.y < obj2.y + obj2.height &&
-           obj1.y + obj1.height > obj2.y;
+// --- Utility: Get a smaller hitbox for obstacles and water items ---
+function getShrunkHitbox(obj, shrinkRatio = 0.5) {
+    // shrinkRatio: 0.5 means hitbox is 50% of original size, centered
+    const shrinkX = obj.width * (1 - shrinkRatio) / 2;
+    const shrinkY = obj.height * (1 - shrinkRatio) / 2;
+    return {
+        x: obj.x + shrinkX,
+        y: obj.y + shrinkY,
+        width: obj.width * shrinkRatio,
+        height: obj.height * shrinkRatio
+    };
+}
+
+// --- Update collision check to use shrunk hitboxes ---
+function checkCollision(obj1, obj2, ratio1 = 0.5, ratio2 = 0.5) {
+    // Use smaller hitboxes for both objects
+    const a = getShrunkHitbox(obj1, ratio1);
+    const b = getShrunkHitbox(obj2, ratio2);
+    return a.x < b.x + b.width &&
+           a.x + a.width > b.x &&
+           a.y < b.y + b.height &&
+           a.y + a.height > b.y;
 }
 
 // --- Timer ---
@@ -551,7 +568,8 @@ function gameLoop(currentTime) {
         const obstacle = obstacles[i];
         obstacle.update(dt);
         obstacle.draw();
-        if (!obstacle.isHit && checkCollision(character, obstacle)) {
+        // Use smaller hitboxes for both character and obstacle
+        if (!obstacle.isHit && checkCollision(character, obstacle, 0.7, 0.5)) {
             hitObstacle(obstacle);
 
             const jerryCanElem = document.getElementById('score-jerrycan');
@@ -598,7 +616,8 @@ function gameLoop(currentTime) {
         const item = waterItems[i];
         item.update(dt);
         item.draw();
-        if (checkCollision(character, item)) {
+        // Use smaller hitboxes for both character and item
+        if (checkCollision(character, item, 0.7, 0.7)) {
             collectWaterItem(i);
         } else if (item.x + item.width < 0) {
             waterItems.splice(i, 1);
