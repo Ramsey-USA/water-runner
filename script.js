@@ -580,6 +580,8 @@ function initGame() {
     updateJerryCan();
     generateNewGroundSegment();
     generateNewGroundSegment();
+    milestoneShown = false;
+    hideMilestonePopup();
 }
 
 function startGame() {
@@ -626,6 +628,12 @@ function updateJerryCan() {
     jerrycanFill.style.height = `${fillPercentage * 100}%`;
     scoreText.textContent = `${score} L`;
     updateGameSpeed();
+
+    // Milestone logic: show popup at score 50, only once per game
+    if (!milestoneShown && score >= 50) {
+        milestoneShown = true;
+        showMilestonePopup();
+    }
 }
 
 function getGameSpeedForScore(score) {
@@ -773,6 +781,24 @@ if (scoreCardButton && scoreCardModal && closeScoreCardModal) {
         }
     });
 }
+
+// --- Milestone Popup State ---
+let milestoneShown = false;
+
+// Show the milestone popup
+function showMilestonePopup() {
+    const popup = document.getElementById('milestone-popup');
+    if (popup) popup.style.display = 'flex';
+}
+
+// Hide the milestone popup
+function hideMilestonePopup() {
+    const popup = document.getElementById('milestone-popup');
+    if (popup) popup.style.display = 'none';
+}
+
+// Attach close event
+document.getElementById('closeMilestonePopup').onclick = hideMilestonePopup;
 
 // --- Initialization ---
 window.onload = () => {
