@@ -22,7 +22,7 @@ for (const [key, src] of Object.entries(images)) {
 // --- UI Elements ---
 const startScreen = document.getElementById('start-screen');
 const gameOverScreen = document.getElementById('game-over-screen');
-const winScreen = document.getElementById('win-screen');
+// const winScreen = document.getElementById('win-screen'); // REMOVE: not used anymore
 const startButton = document.getElementById('startButton');
 const restartButton = document.getElementById('restartButton');
 const winRestartButton = document.getElementById('winRestartButton');
@@ -45,6 +45,8 @@ const scoreCardList = document.getElementById('scoreCardList');
 const helpButton = document.getElementById('helpButton');
 const helpModal = document.getElementById('help-modal');
 const closeHelpModal = document.getElementById('closeHelpModal');
+const winModal = document.getElementById('win-modal');
+const closeWinModal = document.getElementById('closeWinModal');
 
 // --- Game State Variables ---
 let gameRunning = false;
@@ -383,7 +385,7 @@ function drawSplashEffect() {
 
 // --- Sound Effects ---
 const sounds = {
-    jump: new Audio('sounds/jump.mp3'), // <-- Changed from jump.wav to jump.mp3
+    jump: new Audio('sounds/jump.mp3'),
     collect: new Audio('sounds/water_drip.wav'),
     hit: new Audio('sounds/sprite_ouch.mp3'),
     win: new Audio('sounds/winning_game.mp3'),
@@ -397,7 +399,6 @@ const sounds = {
 function playSound(sound, isRapid = false) {
     if (!sound) return;
     if (isRapid) {
-        // For rapid sounds (like collect), create a new instance to avoid stalling
         const s = new Audio(sound.src);
         s.volume = sound.volume ?? 1;
         s.play();
@@ -421,7 +422,7 @@ function collectWaterItem(index) {
     score = Math.max(0, score + waterItems[index].value);
     updateJerryCan();
     waterItems.splice(index, 1);
-    playSound(sounds.collect, true); // Use rapid mode for collect
+    playSound(sounds.collect, true);
 }
 
 // --- Play sound when hitting obstacle ---
@@ -439,13 +440,11 @@ const backgroundMusic = {
     hard: new Audio('sounds/level_three_background_music.mp3')
 };
 
-// Ensure all music loops and is not too loud
 for (const music of Object.values(backgroundMusic)) {
     music.loop = true;
     music.volume = 0.5;
 }
 
-// Utility to stop all background music
 function stopAllMusic() {
     for (const music of Object.values(backgroundMusic)) {
         music.pause();
@@ -453,7 +452,6 @@ function stopAllMusic() {
     }
 }
 
-// Play music for the current level
 function playLevelMusic(level) {
     stopAllMusic();
     if (backgroundMusic[level]) {
@@ -465,19 +463,16 @@ function playLevelMusic(level) {
 function gameLoop(currentTime) {
     if (!gameRunning || gamePaused) return;
 
-    // Calculate delta time (dt)
     const deltaTime = currentTime - lastFrameTime || 16.67;
     lastFrameTime = currentTime;
     const dt = deltaTime / 16.67;
 
     updateTimer(currentTime);
 
-    // Draw background
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = COLORS.LIGHT_BLUE_BG;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Draw and update ground
     updateGroundSegments(dt);
 
     groundSegments.forEach(segment => {
@@ -495,11 +490,9 @@ function gameLoop(currentTime) {
         }
     });
 
-    // Character
     character.update(dt);
     character.draw();
 
-    // Obstacles
     const obstacleMin = LEVELS[currentLevel].obstacleMin;
     const obstacleMax = LEVELS[currentLevel].obstacleMax;
     const obstacleWidth = LEVELS[currentLevel].obstacleWidth;
@@ -529,7 +522,6 @@ function gameLoop(currentTime) {
         }
     }
 
-    // Water Items
     if (
         currentTime - lastWaterItemTime >
         Math.random() * (WATER_ITEM_SPAWN_INTERVAL_MAX - WATER_ITEM_SPAWN_INTERVAL_MIN) +
@@ -555,7 +547,6 @@ function gameLoop(currentTime) {
         }
     }
 
-    // Update/draw obstacles
     for (let i = obstacles.length - 1; i >= 0; i--) {
         const obstacle = obstacles[i];
         obstacle.update(dt);
@@ -563,7 +554,6 @@ function gameLoop(currentTime) {
         if (!obstacle.isHit && checkCollision(character, obstacle)) {
             hitObstacle(obstacle);
 
-            // --- Drop a falling droplet from the jerrycan ---
             const jerryCanElem = document.getElementById('score-jerrycan');
             if (jerryCanElem) {
                 const rect = jerryCanElem.getBoundingClientRect();
@@ -584,7 +574,6 @@ function gameLoop(currentTime) {
         }
     }
 
-    // Draw and update falling droplets
     for (let i = fallingDroplets.length - 1; i >= 0; i--) {
         const d = fallingDroplets[i];
         d.y += d.vy * dt;
@@ -605,7 +594,6 @@ function gameLoop(currentTime) {
         }
     }
 
-    // Update/draw water items
     for (let i = waterItems.length - 1; i >= 0; i--) {
         const item = waterItems[i];
         item.update(dt);
@@ -617,14 +605,12 @@ function gameLoop(currentTime) {
         }
     }
 
-    // Win Condition
     if (score >= WINNING_SCORE) {
         winGame();
         startSplashEffect();
         return;
     }
 
-    // Awareness facts ticker
     factTimer += deltaTime;
     if (factTimer >= FACT_DISPLAY_TIME) {
         currentFactIndex = (currentFactIndex + 1) % awarenessFacts.length;
@@ -632,7 +618,6 @@ function gameLoop(currentTime) {
         factTimer = 0;
     }
 
-    // Draw splash effect if active
     drawSplashEffect();
     updateSplashEffect(dt);
 
@@ -661,22 +646,29 @@ function initGame() {
     hideMilestonePopup();
 }
 
+function closeAllModals() {
+    if (helpModal) helpModal.classList.remove('active');
+    if (scoreCardModal) scoreCardModal.classList.remove('active');
+    if (winModal) winModal.classList.remove('active');
+}
+
 function startGame() {
     if (animationFrameId) {
         cancelAnimationFrame(animationFrameId);
     }
     initGame();
-    startScreen.classList.remove('active');
-    gameOverScreen.classList.remove('active');
-    winScreen.classList.remove('active');
+    closeAllModals();
+    if (startScreen) startScreen.classList.remove('active');
+    if (gameOverScreen) gameOverScreen.classList.remove('active');
+    // winScreen removed
     gameRunning = true;
     gamePaused = false;
     isPaused = false;
-    pauseResumeButton.innerHTML = '<i class="fa-solid fa-pause"></i> Pause';
+    if (pauseResumeButton) pauseResumeButton.innerHTML = '<i class="fa-solid fa-pause"></i> Pause';
     lastFrameTime = performance.now();
     resetTimer();
     startTimer();
-    playLevelMusic(currentLevel); // <-- Play music for selected level
+    playLevelMusic(currentLevel);
     animationFrameId = requestAnimationFrame(gameLoop);
 }
 
@@ -686,7 +678,7 @@ function endGame(reason = "obstacle") {
     stopAllMusic();
     finalScoreText.textContent = `You collected ${score} liters of water.`;
     gameOverFact.textContent = awarenessFacts[Math.floor(Math.random() * awarenessFacts.length)];
-    gameOverScreen.classList.add('active');
+    if (gameOverScreen) gameOverScreen.classList.add('active');
     stopTimer();
 }
 
@@ -698,12 +690,92 @@ function winGame() {
         sounds.win.currentTime = 0;
         sounds.win.play();
     }
-    winScreen.classList.add('active');
+    closeAllModals();
+    if (winModal) winModal.classList.add('active');
     stopTimer();
     saveBestTime(elapsedTime);
     saveTopTime(elapsedTime);
     startSplashEffect();
     finalScoreText.textContent = `You collected ${score} liters of water in ${elapsedTime.toFixed(2)} seconds!`;    
+}
+
+// --- Modal Close Logic ---
+function addModalCloseEvents(modal, closeBtn) {
+    if (!modal || !closeBtn) return;
+    closeBtn.addEventListener('click', () => {
+        modal.classList.remove('active');
+    });
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) modal.classList.remove('active');
+    });
+    document.addEventListener('keydown', (e) => {
+        if (modal.classList.contains('active') && (e.key === 'Escape' || e.key === 'Esc')) {
+            modal.classList.remove('active');
+        }
+    });
+}
+addModalCloseEvents(helpModal, closeHelpModal);
+addModalCloseEvents(scoreCardModal, closeScoreCardModal);
+addModalCloseEvents(winModal, closeWinModal);
+
+// --- Win Modal Buttons Logic ---
+if (winRestartButton) {
+    winRestartButton.addEventListener('click', startGame);
+}
+if (winLearnMoreButton) {
+    winLearnMoreButton.addEventListener('click', () => {
+        window.open('https://www.charitywater.org/', '_blank');
+    });
+}
+if (closeWinModal && winModal) {
+    closeWinModal.addEventListener('click', () => {
+        winModal.classList.remove('active');
+    });
+    winModal.addEventListener('click', (e) => {
+        if (e.target === winModal) winModal.classList.remove('active');
+    });
+    document.addEventListener('keydown', (e) => {
+        if (winModal.classList.contains('active') && (e.key === 'Escape' || e.key === 'Esc')) {
+            winModal.classList.remove('active');
+        }
+    });
+}
+
+// --- Milestone Popup State ---
+let milestoneShown = false;
+
+function showMilestonePopup() {
+    const popup = document.getElementById('milestone-popup');
+    if (popup) {
+        popup.classList.add('active');
+        // Hide after 5 seconds (5000 ms)
+        setTimeout(() => {
+            popup.classList.remove('active');
+        }, 5000);
+    }
+}
+
+function hideMilestonePopup() {
+    const popup = document.getElementById('milestone-popup');
+    if (popup) popup.classList.remove('active');
+}
+
+const closeMilestonePopupBtn = document.getElementById('closeMilestonePopup');
+if (closeMilestonePopupBtn) {
+    closeMilestonePopupBtn.onclick = hideMilestonePopup;
+}
+
+// Optional: close on overlay click or Escape key
+const milestonePopup = document.getElementById('milestone-popup');
+if (milestonePopup) {
+    milestonePopup.addEventListener('click', (e) => {
+        if (e.target === milestonePopup) hideMilestonePopup();
+    });
+    document.addEventListener('keydown', (e) => {
+        if (milestonePopup.classList.contains('active') && (e.key === 'Escape' || e.key === 'Esc')) {
+            hideMilestonePopup();
+        }
+    });
 }
 
 // --- UI Updates ---
@@ -713,7 +785,6 @@ function updateJerryCan() {
     scoreText.textContent = `${score} L`;
     updateGameSpeed();
 
-    // Milestone logic: show popup at score 50, only once per game
     if (!milestoneShown && score >= 50) {
         milestoneShown = true;
         showMilestonePopup();
@@ -749,21 +820,23 @@ window.addEventListener('resize', () => {
 });
 
 // --- Pause/Resume Logic ---
-pauseResumeButton.addEventListener('click', () => {
-    if (!gameRunning) return;
-    isPaused = !isPaused;
-    gamePaused = isPaused;
-    playSound(sounds.pause); // <-- Play pause/resume sound
-    if (isPaused) {
-        pauseResumeButton.innerHTML = '<i class="fa-solid fa-play"></i> Resume';
-        for (const music of Object.values(backgroundMusic)) music.pause();
-    } else {
-        pauseResumeButton.innerHTML = '<i class="fa-solid fa-pause"></i> Pause';
-        if (backgroundMusic[currentLevel]) backgroundMusic[currentLevel].play();
-        lastFrameTime = performance.now();
-        animationFrameId = requestAnimationFrame(gameLoop);
-    }
-});
+if (pauseResumeButton) {
+    pauseResumeButton.addEventListener('click', () => {
+        if (!gameRunning) return;
+        isPaused = !isPaused;
+        gamePaused = isPaused;
+        playSound(sounds.pause);
+        if (isPaused) {
+            pauseResumeButton.innerHTML = '<i class="fa-solid fa-play"></i> Resume';
+            for (const music of Object.values(backgroundMusic)) music.pause();
+        } else {
+            pauseResumeButton.innerHTML = '<i class="fa-solid fa-pause"></i> Pause';
+            if (backgroundMusic[currentLevel]) backgroundMusic[currentLevel].play();
+            lastFrameTime = performance.now();
+            animationFrameId = requestAnimationFrame(gameLoop);
+        }
+    });
+}
 
 // --- Keyboard Controls ---
 document.addEventListener('keydown', (e) => {
@@ -773,53 +846,45 @@ document.addEventListener('keydown', (e) => {
         }
         e.preventDefault();
     } else if (e.code === 'KeyP') {
-        pauseResumeButton.click();
+        if (pauseResumeButton) pauseResumeButton.click();
         e.preventDefault();
     }
 });
 
 // --- Other UI Event Listeners ---
-startButton.addEventListener('click', startGame);
-restartButton.addEventListener('click', startGame);
-winRestartButton.addEventListener('click', startGame);
+if (startButton) startButton.addEventListener('click', startGame);
+if (restartButton) restartButton.addEventListener('click', startGame);
+if (winRestartButton) winRestartButton.addEventListener('click', startGame);
 
-learnMoreButton.addEventListener('click', () => {
-    window.open('https://www.charitywater.org/', '_blank');
-});
-winLearnMoreButton.addEventListener('click', () => {
-    window.open('https://www.charitywater.org/', '_blank');
-});
+if (learnMoreButton) {
+    learnMoreButton.addEventListener('click', () => {
+        window.open('https://www.charitywater.org/', '_blank');
+    });
+}
+if (winLearnMoreButton) {
+    winLearnMoreButton.addEventListener('click', () => {
+        window.open('https://www.charitywater.org/', '_blank');
+    });
+}
 
 if (resetButton) {
     resetButton.addEventListener('click', () => {
-        playSound(sounds.reset); // Play reset sound
+        playSound(sounds.reset);
         gameRunning = false;
         gamePaused = false;
         cancelAnimationFrame(animationFrameId);
-        startScreen.classList.add('active');
-        gameOverScreen.classList.remove('active');
-        winScreen.classList.remove('active');
+        if (startScreen) startScreen.classList.add('active');
+        if (gameOverScreen) gameOverScreen.classList.remove('active');
+        closeAllModals();
         resetTimer();
         updateJerryCan();
     });
 }
 
-// --- Help Modal Logic ---
-if (helpButton && helpModal && closeHelpModal) {
+if (helpButton && helpModal) {
     helpButton.addEventListener('click', () => {
-        playSound(sounds.help); // <-- Play help button sound
+        playSound(sounds.help);
         helpModal.classList.add('active');
-    });
-    closeHelpModal.addEventListener('click', () => {
-        helpModal.classList.remove('active');
-    });
-    helpModal.addEventListener('click', (e) => {
-        if (e.target === helpModal) helpModal.classList.remove('active');
-    });
-    document.addEventListener('keydown', (e) => {
-        if (helpModal.classList.contains('active') && (e.key === 'Escape' || e.key === 'Esc')) {
-            helpModal.classList.remove('active');
-        }
     });
 }
 
@@ -854,45 +919,8 @@ function updateScoreCardList() {
 
 if (scoreCardButton && scoreCardModal && closeScoreCardModal) {
     scoreCardButton.addEventListener('click', () => {
-        playSound(sounds.scoreCard); // <-- Play score card sound
+        playSound(sounds.scoreCard);
         updateScoreCardList();
         scoreCardModal.classList.add('active');
     });
-    closeScoreCardModal.addEventListener('click', () => {
-        scoreCardModal.classList.remove('active');
-    });
-    scoreCardModal.addEventListener('click', (e) => {
-        if (e.target === scoreCardModal) scoreCardModal.classList.remove('active');
-    });
-    document.addEventListener('keydown', (e) => {
-        if (scoreCardModal.classList.contains('active') && (e.key === 'Escape' || e.key === 'Esc')) {
-            scoreCardModal.classList.remove('active');
-        }
-    });
 }
-
-// --- Milestone Popup State ---
-let milestoneShown = false;
-
-// Show the milestone popup
-function showMilestonePopup() {
-    const popup = document.getElementById('milestone-popup');
-    if (popup) popup.style.display = 'flex';
-}
-
-// Hide the milestone popup
-function hideMilestonePopup() {
-    const popup = document.getElementById('milestone-popup');
-    if (popup) popup.style.display = 'none';
-}
-
-// Attach close event
-document.getElementById('closeMilestonePopup').onclick = hideMilestonePopup;
-
-// --- Initialization ---
-window.onload = () => {
-    startScreen.classList.add('active');
-    updateJerryCan();
-    loadBestTime();
-    resetTimer();
-};

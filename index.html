@@ -53,7 +53,10 @@
                         <option value="hard">Hard</option>
                     </select>
                 </div>
-                <button id="startButton">Start Journey</button>
+                <button id="startButton">
+                  <span class="start-icon">🚀</span>
+                  <span class="start-label">Start Journey</span>
+                </button>
                 <p class="awareness-info">100% of Charity: Water's public donations fund clean water projects.</p>
             </section>
 
@@ -135,12 +138,27 @@
             <ul id="scoreCardList"></ul>
         </div>
     </div>
-    <div id="milestone-popup" class="milestone-popup" style="display:none;">
-        <span class="milestone-message">
-            🚰 Halfway there! You’ve collected 50 liters.<br>
-            You’re halfway to delivering clean water—keep going!
-        </span>
-        <button id="closeMilestonePopup" class="close-milestone-btn" aria-label="Close">&times;</button>
+    <div id="milestone-popup" class="modal-overlay">
+        <div class="modal-content milestone-modal-content">
+            <button id="closeMilestonePopup" class="close-milestone-btn" aria-label="Close">&times;</button>
+            <span class="milestone-message">
+                🚰 Halfway there! You’ve collected 50 liters.<br>
+                You’re halfway to delivering clean water—keep going!
+            </span>
+        </div>
+    </div>
+    <!-- Winning Modal -->
+    <div id="win-modal" class="modal-overlay">
+        <div class="modal-content win-modal-content">
+            <button id="closeWinModal" class="close-modal-btn" aria-label="Close">&times;</button>
+            <h2 class="celebration-text">JOURNEY COMPLETE!</h2>
+            <p class="celebration-message">You successfully delivered clean water!</p>
+            <img src="images/celebration_icon.png" alt="Celebration Icon" class="celebration-icon">
+            <div class="game-screen-buttons">
+                <button id="winRestartButton"><i class="fa-solid fa-rotate-right"></i> Play Again</button>
+                <button id="winLearnMoreButton"><i class="fa-solid fa-hand-holding-droplet"></i> Learn More</button>
+            </div>
+        </div>
     </div>
     <footer id="game-footer">
         <a href="https://www.charitywater.org/" target="_blank" rel="noopener" class="footer-link">
