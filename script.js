@@ -617,9 +617,23 @@ function gameLoop(currentTime) {
         if (factsTicker) factsTicker.textContent = awarenessFacts[currentFactIndex];
         factTimer = 0;
     }
-
     drawSplashEffect();
     updateSplashEffect(dt);
+
+    // Draw "Press Space Bar to Jump" instruction statically at the bottom of the gameplay area
+    if (elapsedTime < 6) { // Show for the first 6 seconds of each run
+        ctx.save();
+        ctx.font = "bold 2.2em 'Montserrat', Arial, sans-serif";
+        ctx.fillStyle = "rgba(0,0,0,0.75)";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "bottom";
+        const text = "Press Space Bar to Jump";
+        // Position: horizontally centered, just above the bottom edge of the canvas
+        const padding = 24;
+        const y = canvas.height - padding;
+        ctx.fillText(text, canvas.width / 2, y);
+        ctx.restore();
+    }
 
     animationFrameId = requestAnimationFrame(gameLoop);
 }
