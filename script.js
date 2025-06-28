@@ -727,16 +727,32 @@ if (winLearnMoreButton) {
         window.open('https://www.charitywater.org/', '_blank');
     });
 }
-if (closeWinModal && winModal) {
-    closeWinModal.addEventListener('click', () => {
-        winModal.classList.remove('active');
-    });
-    winModal.addEventListener('click', (e) => {
-        if (e.target === winModal) winModal.classList.remove('active');
-    });
-    document.addEventListener('keydown', (e) => {
-        if (winModal.classList.contains('active') && (e.key === 'Escape' || e.key === 'Esc')) {
-            winModal.classList.remove('active');
+
+// Add Next Level button logic
+const winNextLevelButton = document.getElementById('winNextLevelButton');
+if (winNextLevelButton) {
+    winNextLevelButton.addEventListener('click', () => {
+        // Cycle to next level or show score card/donate if at last level
+        const levels = ['easy', 'normal', 'hard'];
+        let currentIdx = levels.indexOf(currentLevel);
+        if (currentIdx < levels.length - 1) {
+            currentLevel = levels[currentIdx + 1];
+            if (levelSelect) levelSelect.value = currentLevel;
+            startGame();
+        } else {
+            // Final level completed: show score card and highlight donate
+            if (winModal) winModal.classList.remove('active');
+            if (scoreCardModal) {
+                updateScoreCardList();
+                scoreCardModal.classList.add('active');
+            }
+            // Scroll to donate button in footer
+            const donateBtn = document.querySelector('.donate-btn');
+            if (donateBtn) {
+                donateBtn.classList.add('highlight-donate');
+                donateBtn.focus();
+                setTimeout(() => donateBtn.classList.remove('highlight-donate'), 3000);
+            }
         }
     });
 }
@@ -924,3 +940,10 @@ if (scoreCardButton && scoreCardModal && closeScoreCardModal) {
         scoreCardModal.classList.add('active');
     });
 }
+
+// --- CSS for highlighting donate button (add to your style.css) ---
+// .highlight-donate {
+//     outline: 3px solid #FFC907 !important;
+//     box-shadow: 0 0 0 6px #ffe08299 !important;
+//     transition: box-shadow 0.3s, outline 0.3s;
+// }

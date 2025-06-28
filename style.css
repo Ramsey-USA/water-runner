@@ -1053,3 +1053,9 @@ canvas, img, video {
     align-items: center;
     gap: 0.5em;
 }
+
+.highlight-donate {
+    outline: 3px solid #FFC907 !important;
+    box-shadow: 0 0 0 6px #ffe08299 !important;
+    transition: box-shadow 0.3s, outline 0.3s;
+}
