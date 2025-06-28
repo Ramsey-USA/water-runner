@@ -773,6 +773,7 @@ canvas {
     margin-left: auto;
     margin-right: auto;
 }
+.close-modal-btn,
 .close-milestone-btn {
     position: absolute;
     top: 18px;
@@ -799,6 +800,8 @@ canvas {
     align-items: center;
     justify-content: center;
 }
+.close-modal-btn:hover,
+.close-modal-btn:focus,
 .close-milestone-btn:hover,
 .close-milestone-btn:focus {
     opacity: 1;
@@ -1049,9 +1052,6 @@ canvas, img, video {
     font-weight: 800;
     letter-spacing: 0.03em;
     text-transform: none;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5em;
 }
 
 .highlight-donate {
